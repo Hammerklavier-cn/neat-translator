@@ -1,0 +1,11 @@
+[package]
+name = "gtk4-interface"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+
+[dependencies]
+# log = "0.4.26"
+# env_logger = "0.11.7"
+# gtk = { version = "0.9.6", package = "gtk4" }
+# adw = { version = "0.7.2", package = "libadwaita" }
