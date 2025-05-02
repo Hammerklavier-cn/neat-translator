@@ -7,4 +7,4 @@ edition = "2024"
 slint = { version = "1.11", features = ["renderer-femtovg"] }
 
 [build-dependencies]
-slint-build = "1.11.0"
+slint-build = "=1.11.0"

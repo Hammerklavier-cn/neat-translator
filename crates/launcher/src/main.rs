@@ -3,7 +3,7 @@ use slint_interface;
 
 const DEFAULT_INTERFACE: &str = "TRANSLATOR_INTERFACE";
 
-fn main() -> Result<(), slint::PlatformError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world!");
 
     unsafe {
@@ -27,5 +27,5 @@ fn main() -> Result<(), slint::PlatformError> {
         std::env::var(DEFAULT_INTERFACE).unwrap_or_else(|_| "slint".to_string())
     );
 
-    slint_interface::run()
+    Ok(slint_interface::run()?)
 }

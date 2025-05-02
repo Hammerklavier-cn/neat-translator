@@ -1,10 +1,63 @@
-import { LineEdit } from "std-widgets.slint";
-export component Example inherits Window  {
-    VerticalLayout {
-        LineEdit {
-            // This callback is invoked when the `text` property of the LineEdit changes
-            changed text => { t.text = self.text; }
+import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch } from "std-widgets.slint";
+export component MainWindow inherits Window {
+
+    property <ColorScheme> current-color-scheme: ColorScheme.dark;
+
+    min-height: 400px;
+    preferred-height: self.min-height;
+
+    preferred-width: 800px;
+
+    base-area := VerticalBox {
+
+        header-area := HorizontalBox {
+            alignment: LayoutAlignment.end;
+
+            Switch {
+                horizontal-stretch: 0;
+                text: @tr("Dark Mode");
+                checked: Palette.color-scheme == ColorScheme.dark;
+                toggled => {
+                    Palette.color-scheme = current-color-scheme == ColorScheme.dark ? ColorScheme.light : ColorScheme.dark;
+                    root.current-color-scheme = current-color-scheme == ColorScheme.dark ? ColorScheme.light : ColorScheme.dark;
+                }
+            }
         }
-        t := Text { text : " "; }
+
+        main-area := HorizontalBox {
+            property <length> left-fix-width: 100px;
+
+            alignment: LayoutAlignment.stretch;
+
+            VerticalLayout {
+                width: parent.left-fix-width;
+                Text {
+                    text: "Neat Translator";
+                    font-size: 20px;
+
+                    horizontal-alignment: TextHorizontalAlignment.center;
+                    wrap: TextWrap.word-wrap;
+                }
+            }
+
+            Rectangle {
+                width: 0.5px;
+                height: 100%;
+                background: current-color-scheme == ColorScheme.dark ? dimgray : lightgray;
+            }
+
+            VerticalLayout {
+                LineEdit {
+                // This callback is invoked when the `text` property of the LineEdit changes
+                changed text => {
+                        t.text = self.text;
+                    }
+                }
+
+                t := Text {
+                    text: " ";
+                }
+            }
+        }
     }
 }

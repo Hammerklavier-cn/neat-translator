@@ -16,7 +16,7 @@ mod tests {
 slint::include_modules!();
 
 pub fn run() -> Result<(), slint::PlatformError> {
-    let main_window = Example::new()?;
+    let main_window = MainWindow::new()?;
 
     main_window.run()
 }
