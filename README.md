@@ -1,14 +1,16 @@
 # neat-translator
 
-A clean and efficient translator for your learning and translation needs.
+[English](README_en.md)
 
-Based on Rust + Slint, this application provides a user-friendly interface with minimal resources requisition, fast response time and no advertisements.
+使用有道词典、柯林斯等词典以及Qwen、DeepSeek等AI的API的翻译工具。
 
-## Features
+基于 Rust + Slint 开发，提供跨平台支持，资源占用少，性能高，响应快，且不含任何广告。
 
-- [ ] **Lightning-fast translations**: Leveraging Rust's performance for near-instant results
-- [ ] **Cross-platform compatibility**: Works seamlessly on Windows, macOS and Linux, and even Android, iOS, WebAssembly and HarmonyOS in the future.
-- [ ] **Minimalist interface**: Focus on text input and results without clutter
-- [ ] **Multi-language support**: Translate between 100+ languages with high accuracy
-- [ ] **Clipboard integration**: Automatically detect copied text for quick translation
-- [ ] **Low memory footprint**: Typically uses under 50MB of RAM during operation
+## 功能特性
+
+- [ ] **闪电般快速翻译**：基于Rust高性能特性实现近乎即时的翻译效果
+- [ ] **跨平台兼容性**：完美支持 Windows/macOS/Linux，未来将添加对 Android / iOS / WebAssembly / HarmonyOS 4+ 的支持
+- [ ] **极简界面**：专注文本输入与翻译结果，无冗余元素干扰
+- [ ] **多语言互译**：支持100余种语言的高精度互译
+- [ ] **剪贴板集成**：自动检测复制文本实现快速翻译
+- [ ] **低内存占用**：运行时内存消耗通常低于50MB
