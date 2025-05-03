@@ -1,11 +1,30 @@
 import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch } from "std-widgets.slint";
+
+/*
+The structure is as followed:
+
++--------------------------------------------+
+|               MainWindow                   |
+| +----------------------------------------+ |
+| |            base-area                   | |
+| | +------------------------------------+ | |
+| | |    header-area (HorizontalBox)     | | |
+| | +------------------------------------+ | |
+| | |       main-area (HorizontalBox)    | | |
+| | | +----------------+---------------+ | | |
+| | | |(VerticalBox)   |  (VerticalBox)| | | |
+| | | +----------------+---------------+ | | |
+| | +------------------------------------+ | |
+| +----------------------------------------+ |
+*/
+
+
 export component MainWindow inherits Window {
 
     property <ColorScheme> current-color-scheme: Palette.color-scheme;
 
     min-height: 400px;
     preferred-height: self.min-height;
-
     preferred-width: 800px;
 
     base-area := VerticalBox {
