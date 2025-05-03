@@ -18,5 +18,11 @@ slint::include_modules!();
 pub fn run() -> Result<(), slint::PlatformError> {
     let main_window = MainWindow::new()?;
 
+    main_window.global::<Logic>().on_translate_text(|text| {
+        // Implement translation logic here
+        println!("{}", text.to_uppercase());
+        text.to_uppercase().into()
+    });
+
     main_window.run()
 }
