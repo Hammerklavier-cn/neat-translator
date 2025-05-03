@@ -18,13 +18,16 @@ The structure is as followed:
 | +----------------------------------------+ |
 */
 
+export global Logic {
+    // Implementation of this callback is seen in the business logic (Rust script).
+    pure callback translate-text(string) -> string;
+}
 
 export component MainWindow inherits Window {
 
-    property <ColorScheme> current-color-scheme: Palette.color-scheme;
-
     min-height: 400px;
     preferred-height: self.min-height;
+
     preferred-width: 800px;
 
     base-area := VerticalBox {
@@ -37,7 +40,7 @@ export component MainWindow inherits Window {
                 text: @tr("Dark Mode");
                 checked: Palette.color-scheme == ColorScheme.dark;
                 toggled => {
-                    Palette.color-scheme = !(current-color-scheme == ColorScheme.dark) ? ColorScheme.dark : ColorScheme.light;
+                    Palette.color-scheme = !(Palette.color-scheme == ColorScheme.dark) ? ColorScheme.dark : ColorScheme.light;
                 }
             }
         }
@@ -61,19 +64,35 @@ export component MainWindow inherits Window {
             Rectangle {
                 width: 0.5px;
                 height: 100%;
-                background: current-color-scheme == ColorScheme.dark ? dimgray : lightgray;
+                background: Palette.color-scheme == ColorScheme.dark ? dimgray : lightgray;
             }
 
             VerticalLayout {
-                LineEdit {
-                // This callback is invoked when the `text` property of the LineEdit changes
-                changed text => {
-                        t.text = self.text;
+
+                HorizontalBox {
+                    max-height: search-line-edit.min-height;
+                    search-line-edit := LineEdit {
+                        height: 50px;
+                        font-size: 24px;
+                        accepted => {
+                            t.text = Logic.translate-text(search-line-edit.text);
+                            search-line-edit.select-all();
+                    // Implement translation logic here
+                }
+                    }
+
+                    Button {
+                        text: "Translate";
+                        clicked => {
+                            t.text = Logic.translate-text(search-line-edit.text)
+                        // Implement translation logic here
+                    }
                     }
                 }
 
                 t := Text {
-                    text: " ";
+                    text: "";
+                    font-size: 16px;
                 }
             }
         }
