@@ -1,5 +1,23 @@
 import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch } from "std-widgets.slint";
 
+/*
+The structure is as followed:
+
++--------------------------------------------+
+|               MainWindow                   |
+| +----------------------------------------+ |
+| |            base-area                   | |
+| | +------------------------------------+ | |
+| | |    header-area (HorizontalBox)     | | |
+| | +------------------------------------+ | |
+| | |       main-area (HorizontalBox)    | | |
+| | | +----------------+---------------+ | | |
+| | | |(VerticalBox)   |  (VerticalBox)| | | |
+| | | +----------------+---------------+ | | |
+| | +------------------------------------+ | |
+| +----------------------------------------+ |
+*/
+
 export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
     pure callback translate-text(string) -> string;
@@ -51,25 +69,26 @@ export component MainWindow inherits Window {
 
             VerticalLayout {
 
-            HorizontalBox {
-                max-height: search-line-edit.min-height;
-                search-line-edit := LineEdit {
-                height: 50px;
-                font-size: 24px;
-                accepted => {
-                    t.text = Logic.translate-text(search-line-edit.text)
+                HorizontalBox {
+                    max-height: search-line-edit.min-height;
+                    search-line-edit := LineEdit {
+                        height: 50px;
+                        font-size: 24px;
+                        accepted => {
+                            t.text = Logic.translate-text(search-line-edit.text);
+                            search-line-edit.select-all();
                     // Implement translation logic here
                 }
-                }
+                    }
 
-                Button {
-                    text: "Translate";
-                    clicked => {
-                        t.text = Logic.translate-text(search-line-edit.text)
+                    Button {
+                        text: "Translate";
+                        clicked => {
+                            t.text = Logic.translate-text(search-line-edit.text)
                         // Implement translation logic here
                     }
+                    }
                 }
-            }
 
                 t := Text {
                     text: "";
