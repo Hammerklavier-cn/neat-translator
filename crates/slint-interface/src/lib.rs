@@ -18,10 +18,18 @@ slint::include_modules!();
 pub fn run() -> Result<(), slint::PlatformError> {
     let main_window = MainWindow::new()?;
 
+    let about_slint_window = AboutSlintWindow::new()?;
+
     main_window.global::<Logic>().on_translate_text(|text| {
         // Implement translation logic here
         println!("{}", text.to_uppercase());
         text.to_uppercase().into()
+    });
+
+    main_window.global::<Logic>().on_show_about_slint(move || {
+        // Implement show about slint logic here
+        println!("About Slint");
+        about_slint_window.show().unwrap();
     });
 
     main_window.run()

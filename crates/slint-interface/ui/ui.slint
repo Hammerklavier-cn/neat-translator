@@ -1,4 +1,5 @@
 import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch } from "std-widgets.slint";
+import { AboutSlintWindow } from "about.slint";
 
 /*
 The structure is as followed:
@@ -21,9 +22,19 @@ The structure is as followed:
 export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
     pure callback translate-text(string) -> string;
+    pure callback show-about-slint();
 }
 
+export component AboutSlintWindow inherits AboutSlintWindow { }
+
 export component MainWindow inherits Window {
+
+    //child windows
+
+    // about-slint := AboutSlintWindow {
+    //     x: root.x + root.width / 2 - self.width / 2;
+    //     y: root.y + root.height / 2 - self.height / 2;
+    // }
 
     min-height: 400px;
     preferred-height: self.min-height;
@@ -35,12 +46,23 @@ export component MainWindow inherits Window {
         header-area := HorizontalBox {
             alignment: LayoutAlignment.end;
 
+            // Switch Light/Dark Mode
             Switch {
                 horizontal-stretch: 0;
                 text: @tr("Dark Mode");
                 checked: Palette.color-scheme == ColorScheme.dark;
                 toggled => {
                     Palette.color-scheme = !(Palette.color-scheme == ColorScheme.dark) ? ColorScheme.dark : ColorScheme.light;
+                }
+            }
+
+            // About Slint
+            Button {
+                text: @tr("About Slint");
+                clicked => {
+                    // Show about dialog
+                    // about-slint.show();
+                    Logic.show-about-slint()
                 }
             }
         }
