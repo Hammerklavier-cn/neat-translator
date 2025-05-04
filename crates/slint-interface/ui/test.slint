@@ -1,0 +1,28 @@
+import { Button } from "std-widgets.slint";
+export component Example inherits Window {
+    property <int> value: 10;
+    timer := Timer {
+        interval: 1s;
+        running: true;
+        triggered() => {
+            value -= 1;
+            if (value == 0) {
+                self.running = false;
+            }
+        }
+    }
+
+    HorizontalLayout {
+        Text {
+            text: value;
+        }
+
+        Button {
+            text: "Reset";
+            clicked() => {
+                value = 10;
+                timer.running = true;
+            }
+        }
+    }
+}

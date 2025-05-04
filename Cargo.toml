@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/gtk4-interface", "crates/launcher", "crates/slint-interface"]
+members = [ "crates/backends","crates/gtk4-interface", "crates/launcher", "crates/slint-interface"]
 default = "crates/launcher"
 
 [workspace.package]

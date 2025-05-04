@@ -1,0 +1,10 @@
+[package]
+name = "backends"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+
+[dependencies]
+openai-api-rs = "6.0.4"
+anyhow = { version = "1.0.98", features = ["backtrace"] }
+strum = { version = "0.27", features = ["derive"] }
