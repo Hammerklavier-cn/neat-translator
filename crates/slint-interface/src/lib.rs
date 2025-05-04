@@ -20,9 +20,9 @@ pub fn run() -> Result<(), slint::PlatformError> {
 
     let about_slint_window = AboutSlintWindow::new()?;
 
-    main_window.global::<Logic>().on_translate_text(|text| {
+    main_window.global::<Logic>().on_translate_word(|text| {
         // Implement translation logic here
-        println!("{}", text.to_uppercase());
+        println!("Translate Word: {}", text.to_uppercase());
         text.to_uppercase().into()
     });
 
@@ -30,6 +30,12 @@ pub fn run() -> Result<(), slint::PlatformError> {
         // Implement show about slint logic here
         println!("About Slint");
         about_slint_window.show().unwrap();
+    });
+
+    main_window.global::<Logic>().on_translate_sentence(|text| {
+        // Implement translation logic here
+        println!("Translate Sentence: {}", text.to_uppercase());
+        text.to_uppercase().into()
     });
 
     main_window.run()

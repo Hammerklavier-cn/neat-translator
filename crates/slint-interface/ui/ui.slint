@@ -24,8 +24,9 @@ The structure is as followed:
 
 export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
-    pure callback translate-text(string) -> string;
+    pure callback translate-word(string) -> string;
     pure callback show-about-slint();
+    pure callback translate-sentence(string) -> string;
 }
 
 export component AboutSlintWindow inherits AboutSlintWindow { }
@@ -92,7 +93,7 @@ export component MainWindow inherits Window {
                                 height: 50px;
                                 font-size: 24px;
                                 accepted => {
-                                    t-word.text = Logic.translate-text(search-line-edit.text);
+                                    t-word.text = Logic.translate-word(search-line-edit.text);
                                     search-line-edit.select-all();
                                     // Implement translation logic here
                                 }
@@ -101,7 +102,7 @@ export component MainWindow inherits Window {
                             Button {
                                 text: "Translate";
                                 clicked => {
-                                    t-word.text = Logic.translate-text(search-line-edit.text)
+                                    t-word.text = Logic.translate-word(search-line-edit.text)
                                     // Implement translation logic here
                                 }
                             }
@@ -116,15 +117,41 @@ export component MainWindow inherits Window {
                 }
 
                 Tab {
-                    title: "Sentenses";
+                    title: "Sentences";
+
+                    private property <int> seconds: 1;
+                    private property <string> old-string;
+                    private property <string> new-string;
+
+                    timer := Timer {
+                        interval: 1s;
+                        running: false;
+                        triggered() => {
+                            debug("Timer of sentense is activated!");
+                            new-string = original-text.text;
+                            if (old-string == new-string) {
+                                translated-text.text = Logic.translate-sentence(new-string);
+                                self.running = false;
+                            }
+                        }
+                    }
+
                     HorizontalBox {
-                        TextEdit {
-                            horizontal-stretch: 1;
+                        alignment: LayoutAlignment.stretch;
+                        original-text := TextEdit {
+                            width: 50%;
                             font-size: 16px;
+                            wrap: TextWrap.word-wrap;
+
+                            edited(text) => {
+                                debug("Text is edited!");
+                                old-string = self.text; // TODO: Buggy! The value of old-string will change! It is only a pointer!
+                                timer.running = true;
+                            }
                         }
 
-                        t-Sentense := Text {
-                            horizontal-stretch: 1;
+                        translated-text := Text {
+                            width: 50%;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
                         }
