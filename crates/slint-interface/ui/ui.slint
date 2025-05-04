@@ -29,13 +29,6 @@ export component AboutSlintWindow inherits AboutSlintWindow { }
 
 export component MainWindow inherits Window {
 
-    //child windows
-
-    // about-slint := AboutSlintWindow {
-    //     x: root.x + root.width / 2 - self.width / 2;
-    //     y: root.y + root.height / 2 - self.height / 2;
-    // }
-
     min-height: 500px;
     preferred-height: self.min-height;
 
@@ -121,14 +114,14 @@ export component MainWindow inherits Window {
 
                 Tab {
                     title: "Sentenses";
-                    VerticalLayout {
+                    HorizontalBox {
                         TextEdit {
-                            vertical-stretch: 1;
+                            horizontal-stretch: 1;
                             font-size: 16px;
                         }
 
                         t-Sentense := Text {
-                            vertical-stretch: 1;
+                            horizontal-stretch: 1;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
                         }
