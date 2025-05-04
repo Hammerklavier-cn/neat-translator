@@ -1,4 +1,4 @@
-import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch } from "std-widgets.slint";
+import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidget, TextEdit } from "std-widgets.slint";
 import { AboutSlintWindow } from "about.slint";
 
 /*
@@ -36,44 +36,18 @@ export component MainWindow inherits Window {
     //     y: root.y + root.height / 2 - self.height / 2;
     // }
 
-    min-height: 400px;
+    min-height: 500px;
     preferred-height: self.min-height;
 
-    preferred-width: 800px;
+    min-width: 800px;
+    preferred-width: self.min-width;
 
     base-area := VerticalBox {
 
         header-area := HorizontalBox {
-            alignment: LayoutAlignment.end;
+            alignment: LayoutAlignment.space-between;
 
-            // Switch Light/Dark Mode
-            Switch {
-                horizontal-stretch: 0;
-                text: @tr("Dark Mode");
-                checked: Palette.color-scheme == ColorScheme.dark;
-                toggled => {
-                    Palette.color-scheme = !(Palette.color-scheme == ColorScheme.dark) ? ColorScheme.dark : ColorScheme.light;
-                }
-            }
-
-            // About Slint
-            Button {
-                text: @tr("About Slint");
-                clicked => {
-                    // Show about dialog
-                    // about-slint.show();
-                    Logic.show-about-slint()
-                }
-            }
-        }
-
-        main-area := HorizontalBox {
-            property <length> left-fix-width: 100px;
-
-            alignment: LayoutAlignment.stretch;
-
-            VerticalLayout {
-                width: parent.left-fix-width;
+            HorizontalLayout {
                 Text {
                     text: "Neat Translator";
                     font-size: 20px;
@@ -83,38 +57,82 @@ export component MainWindow inherits Window {
                 }
             }
 
-            Rectangle {
-                width: 0.5px;
-                height: 100%;
-                background: Palette.color-scheme == ColorScheme.dark ? dimgray : lightgray;
+            HorizontalLayout {
+            // Switch Light/Dark Mode
+            Switch {
+                    horizontal-stretch: 0;
+                    text: @tr("Dark Mode");
+                    checked: Palette.color-scheme == ColorScheme.dark;
+                    toggled => {
+                        Palette.color-scheme = !(Palette.color-scheme == ColorScheme.dark) ? ColorScheme.dark : ColorScheme.light;
+                    }
+                }
+
+            // About Slint
+            Button {
+                    text: @tr("About Slint");
+                    clicked => {
+                    // Show about dialog
+                    // about-slint.show();
+                    Logic.show-about-slint()
+                    }
+                }
             }
+        }
 
-            VerticalLayout {
+        main-area := HorizontalBox {
+            property <length> left-fix-width: 100px;
 
-                HorizontalBox {
-                    max-height: search-line-edit.min-height;
-                    search-line-edit := LineEdit {
-                        height: 50px;
-                        font-size: 24px;
-                        accepted => {
-                            t.text = Logic.translate-text(search-line-edit.text);
-                            search-line-edit.select-all();
-                    // Implement translation logic here
+            alignment: LayoutAlignment.stretch;
+
+            TabWidget {
+
+                Tab {
+                    title: "Word";
+                    VerticalLayout {
+                        HorizontalBox {
+                            max-height: search-line-edit.min-height;
+                            search-line-edit := LineEdit {
+                                height: 50px;
+                                font-size: 24px;
+                                accepted => {
+                                    t-word.text = Logic.translate-text(search-line-edit.text);
+                                    search-line-edit.select-all();
+                                    // Implement translation logic here
+                                }
+                            }
+
+                            Button {
+                                text: "Translate";
+                                clicked => {
+                                    t-word.text = Logic.translate-text(search-line-edit.text)
+                                    // Implement translation logic here
+                                }
+                            }
+                        }
+
+                        t-word := Text {
+                            text: "";
+                            font-size: 16px;
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
                 }
-                    }
 
-                    Button {
-                        text: "Translate";
-                        clicked => {
-                            t.text = Logic.translate-text(search-line-edit.text)
-                        // Implement translation logic here
-                    }
-                    }
-                }
+                Tab {
+                    title: "Sentenses";
+                    VerticalLayout {
+                        TextEdit {
+                            vertical-stretch: 1;
+                            font-size: 16px;
+                        }
 
-                t := Text {
-                    text: "";
-                    font-size: 16px;
+                        t-Sentense := Text {
+                            vertical-stretch: 1;
+                            font-size: 16px;
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
                 }
             }
         }

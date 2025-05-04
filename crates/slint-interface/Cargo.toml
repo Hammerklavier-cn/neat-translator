@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-slint = { version = "1.11", features = ["renderer-femtovg"] }
+slint = { version = "1.11", features = [
+    "renderer-femtovg",
+    "backend-winit-wayland",
+] }
 
 [build-dependencies]
 slint-build = "=1.11.0"
