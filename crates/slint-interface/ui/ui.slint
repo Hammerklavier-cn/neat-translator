@@ -32,6 +32,9 @@ export global Logic {
 export component AboutSlintWindow inherits AboutSlintWindow { }
 
 export component MainWindow inherits Window {
+    in-out property <string> original-text <=> original-textedit.text;
+    in-out property <string> translate-result <=> translated-textedit.text;
+    in-out property <string> api-key: "sk-xx";
 
     min-height: 500px;
     preferred-height: self.min-height;
@@ -123,37 +126,56 @@ export component MainWindow inherits Window {
                     private property <string> old-string;
                     private property <string> new-string;
 
-                    timer := Timer {
-                        interval: 1s;
-                        running: false;
-                        triggered() => {
-                            debug("Timer of sentense is activated!");
-                            new-string = original-text.text;
-                            if (old-string == new-string) {
-                                translated-text.text = Logic.translate-sentence(new-string);
-                                self.running = false;
-                            }
-                        }
-                    }
+                    // timer := Timer {
+                    //     interval: 3s;
+                    //     running: false;
+                    //     triggered() => {
+                    //         new-string = original-textedit.text;
+                    //         if (old-string == new-string) {
+                    //             // translated-text.text = Logic.translate-sentence(new-string);
+                    //             debug("Timer: old string is " + old-string + "New string is" + new-string);
+                    //             Logic.translate-sentence(new-string);
+                    //             self.running = false;
+                    //         }
+                    //     }
+                    // }
 
                     HorizontalBox {
                         alignment: LayoutAlignment.stretch;
-                        original-text := TextEdit {
+                        original-textedit := TextEdit {
                             width: 50%;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
 
-                            edited(text) => {
-                                debug("Text is edited!");
-                                old-string = self.text; // TODO: Buggy! The value of old-string will change! It is only a pointer!
-                                timer.running = true;
+                            // edited(text) => {
+                            //     old-string = self.text;
+                            //     if (timer.running == true) {
+                            //         timer.running = false;
+                            //         timer.running = true;
+                            //         debug("Reactivate timer.")
+                            //     } else {
+                            //         timer.running = true;
+                            //         debug()
+                            //     }
+                            //     debug("text is edited to " + self.text);
+                            // }
+
+                            key-pressed(event) => {
+                                if (event.modifiers.control && (event.text == "\n")) {
+                                    debug("Pressed Ctrl + Enter");
+                                    Logic.translate-sentence(original-textedit.text);
+                                    return EventResult.accept;
+                                } else {
+                                    return EventResult.reject;
+                                }
                             }
                         }
 
-                        translated-text := Text {
+                        translated-textedit := TextEdit {
                             width: 50%;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
+                            read-only: true;
                         }
                     }
                 }

@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use backends::SentenceTranslator;
+
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
@@ -17,8 +21,10 @@ slint::include_modules!();
 
 pub fn run() -> Result<(), slint::PlatformError> {
     let main_window = MainWindow::new()?;
+    let main_window_weak_arc = Arc::new(main_window.as_weak());
 
     let about_slint_window = AboutSlintWindow::new()?;
+    let setting_window = SettingWindow::new()?;
 
     main_window.global::<Logic>().on_translate_word(|text| {
         // Implement translation logic here
@@ -32,10 +38,51 @@ pub fn run() -> Result<(), slint::PlatformError> {
         about_slint_window.show().unwrap();
     });
 
-    main_window.global::<Logic>().on_translate_sentence(|text| {
-        // Implement translation logic here
-        println!("Translate Sentence: {}", text.to_uppercase());
-        text.to_uppercase().into()
+    main_window
+        .global::<Logic>()
+        .on_show_setting_window(move || {
+            println!("Show Setting Window");
+            setting_window.show().unwrap();
+        });
+
+    main_window.global::<Logic>().on_translate_sentence({
+        let main_window_weak_arc = main_window_weak_arc.clone();
+
+        move |text| {
+            let text = text.to_string();
+            println!("Translate {}", text);
+
+            if text == String::new() {
+                println!("Detect empty string, skip translating.");
+                return;
+            }
+
+            let main_window_weak = main_window_weak_arc.clone();
+            let main_window = main_window_weak.upgrade().unwrap();
+
+            let api_key = main_window.get_api_key().to_string();
+
+            // 使用线程池执行阻塞操作
+            std::thread::spawn(move || {
+                println!("api-key: {}", api_key);
+                let translator = backends::DeepSeekSentenceTranslator::new("sk-xx".to_string());
+
+                let translate_result = translator
+                    .translate_sentence(
+                        &text,
+                        backends::Language::English,
+                        backends::Language::Chinese,
+                    )
+                    .unwrap_or_else(|e| format!("Translation failed: {}", e));
+
+                // 通过事件循环更新UI
+                let _ = main_window_weak.upgrade_in_event_loop(move |handle| {
+                    handle.set_translate_result(translate_result.into())
+                });
+            });
+
+            // 立即返回空字符串占位符
+        }
     });
 
     main_window.run()

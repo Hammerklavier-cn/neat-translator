@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+backends = {path = "../backends"}
+
 slint = { version = "1.11", features = [
     "renderer-femtovg",
     "backend-winit-wayland",
