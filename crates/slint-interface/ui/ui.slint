@@ -1,5 +1,6 @@
 import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidget, TextEdit } from "std-widgets.slint";
 import { AboutSlintWindow } from "about.slint";
+import {SettingWindow} from "settings.slint";
 
 /*
 The structure is as followed:
@@ -26,10 +27,13 @@ export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
     pure callback translate-word(string) -> string;
     pure callback show-about-slint();
-    pure callback translate-sentence(string) -> string;
+    pure callback show-setting-window();
+    pure callback translate-sentence(string);
 }
 
 export component AboutSlintWindow inherits AboutSlintWindow { }
+
+export component SettingWindow inherits SettingWindow { }
 
 export component MainWindow inherits Window {
     in-out property <string> original-text <=> original-textedit.text;
@@ -76,6 +80,14 @@ export component MainWindow inherits Window {
                     // about-slint.show();
                     Logic.show-about-slint()
                     }
+                }
+            }
+
+            // Settings
+            Button {
+                text: @tr("Settings");
+                clicked => {
+                    Logic.show-setting-window();
                 }
             }
         }

@@ -1,0 +1,42 @@
+import { TabWidget, ScrollView, LineEdit } from "std-widgets.slint";
+
+component ApiKeyStripe inherits HorizontalLayout {
+    in-out property <string> api-name <=> api-name-text.text;
+    in-out property <string> api-key <=> api-key-lineedit.text;
+
+    api-name-text := Text {
+        font-size: 16px;
+    }
+
+    api-key-lineedit := LineEdit {
+        font-size: 16px;
+    }
+}
+
+export component SettingWindow inherits Window {
+    TabWidget {
+        Tab {
+
+            title: "api-key";
+
+            // ScrollView {
+                VerticalLayout {
+                ApiKeyStripe {
+                    api-name: "DeepSeek V3";
+                    api-key: "";
+                }
+
+                ApiKeyStripe {
+                    api-name: "Qwen3";
+                    api-key: "";
+                }
+
+                ApiKeyStripe {
+                    api-name: "Qwen2.5 max";
+                    api-key: "";
+                }
+            }
+            // }
+        }
+    }
+}
