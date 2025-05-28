@@ -20,6 +20,26 @@ mod tests {
 slint::include_modules!();
 
 pub fn run() -> Result<(), slint::PlatformError> {
+    // First initialise and load api-keys, etc.
+    let profile = match backends::initialise() {
+        Ok(_) => {}
+        Err(e) => {
+            let error_window = ErrorWindow::new()?;
+
+            error_window
+                .as_weak()
+                .upgrade_in_event_loop(move |window| {
+                    window.set_error_hint("Initialisation Failed Error:".into());
+                    window.set_error_text(e.to_string().into());
+                })
+                .unwrap();
+
+            error_window.run()?;
+
+            return Ok(());
+        }
+    };
+
     let main_window = MainWindow::new()?;
     let main_window_weak_arc = Arc::new(main_window.as_weak());
 

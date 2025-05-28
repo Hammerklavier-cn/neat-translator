@@ -35,6 +35,11 @@ export component AboutSlintWindow inherits AboutSlintWindow { }
 
 export component SettingWindow inherits SettingWindow { }
 
+export component ErrorWindow inherits ErrorWindow {
+    in-out property <string> error-text <=> self.text;
+    in-out property <string> error-hint <=> self.hint;
+}
+
 export component MainWindow inherits Window {
     in-out property <string> original-text <=> original-textedit.text;
     in-out property <string> translate-result <=> translated-textedit.text;
