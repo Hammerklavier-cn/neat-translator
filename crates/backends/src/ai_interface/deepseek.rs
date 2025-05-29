@@ -71,7 +71,11 @@ pub(crate) struct RequestBody {
 pub(crate) struct ResponseBody {
     pub(crate) id: String,
     pub(crate) choices: Vec<ResponseChoice>,
-    // TODO: Implement the missing fields
+    pub(crate) created: u64,
+    pub(crate) model: String,
+    pub(crate) system_fingerprint: String,
+    pub(crate) object: String,
+    pub(crate) usage: Usage,
 }
 
 #[derive(Deserialize, Debug)]
@@ -79,6 +83,7 @@ pub(crate) struct ResponseChoice {
     pub(crate) index: u32,
     pub(crate) message: CompletionMessage,
     pub(crate) finish_reason: FinishReason,
+    pub(crate) logprobs: Option<Logprobs>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -100,6 +105,41 @@ pub(crate) struct CompletionMessage {
     pub(crate) content: Option<String>,
     pub(crate) reasoning_content: Option<String>,
     pub(crate) role: MsgRole,
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct Logprobs {
+    pub(crate) content: Option<LogprobsContent>,
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct LogprobsContent {
+    pub(crate) token: String,
+    pub(crate) logprob: i32,
+    pub(crate) bytes: Option<Vec<u8>>,
+    pub(crate) top_logprobs: Vec<TopLogprob>,
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct TopLogprob {
+    pub(crate) token: String,
+    pub(crate) logprob: i32,
+    pub(crate) bytes: Option<Vec<u8>>,
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct Usage {
+    pub(crate) completion_tokens: u32,
+    pub(crate) prompt_tokens: u32,
+    pub(crate) prompt_cache_hit_tokens: u32,
+    pub(crate) prompt_cache_miss_tokens: u32,
+    pub(crate) total_tokens: u32,
+    pub(crate) completion_tokens_details: Option<CompletionTokensDetails>,
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct CompletionTokensDetails {
+    pub(crate) reasoning_tokens: u32,
 }
 
 // fn main() -> Result<(), Box<dyn std::error::Error>> {
