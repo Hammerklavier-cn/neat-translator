@@ -179,9 +179,21 @@ pub enum Language {
     Korean,
     Auto,
 }
+pub enum AiProvider {
+    DeepSeek,
+    Youdao,
+    Qwen,
+}
+
+/// Trait for all modules
+pub trait Translator {
+    fn get_api_key(&self) -> String;
+    fn save_api_key(&self) -> Result<(), anyhow::Error>;
+    fn get_url(&self) -> String;
+}
 
 /// Trait for translating single word or phrase.
-pub trait WordTranslator {
+pub trait WordTranslator: Translator {
     fn translate_word(
         &self,
         word: &str,
@@ -191,7 +203,7 @@ pub trait WordTranslator {
 }
 
 /// Trait for translating sentences.
-pub trait SentenceTranslator {
+pub trait SentenceTranslator: Translator {
     fn translate_sentence(
         &self,
         sentence: &str,
@@ -228,6 +240,19 @@ impl DeepSeekSentenceTranslator {
             prompt: String::from("请翻译以下句子。你只需要输出翻译结果。"),
             max_tokens: 8192,
         }
+    }
+}
+impl Translator for DeepSeekSentenceTranslator {
+    fn get_url(&self) -> String {
+        return self.web_address.clone();
+    }
+    fn get_api_key(&self) -> String {
+        return String::new();
+        // TODO!
+    }
+    fn save_api_key(&self) -> Result<(), anyhow::Error> {
+        return Err(anyhow!("Not implemented yet!"));
+        // TODO!
     }
 }
 impl SentenceTranslator for DeepSeekSentenceTranslator {
