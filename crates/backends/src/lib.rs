@@ -14,13 +14,158 @@ mod tests {
 }
 
 mod ai_interact;
+pub mod error;
+pub mod storage;
 
-use anyhow::{Context, Error, Result, anyhow};
+use std::{
+    io::{Read, Write},
+    path::Path,
+};
+
+use anyhow::{Context, Result, anyhow};
+use dirs;
 use reqwest::{blocking::Client, header::HeaderMap};
 // use openai_api_rs::v1::api::OpenAIClient;
 // use openai_api_rs::v1::chat_completion::{self, ChatCompletionMessage, ChatCompletionRequest};
 // use openai_api_rs::v1::common::GPT4_O;
 // use std::env;
+
+pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
+    // TODO
+    let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
+    let prog_config_dir_path = config_dir.join(Path::new("neat-translator.org"));
+    let config_file_path = prog_config_dir_path.join(Path::new("config.toml"));
+
+    match std::fs::exists(&prog_config_dir_path) {
+        Ok(true) => {
+            if prog_config_dir_path.is_file() {
+                return Err(anyhow!(error::Error::new_config_dir_is_file(
+                    prog_config_dir_path
+                )));
+            } else if prog_config_dir_path.is_symlink() {
+                let prog_config_dir_canonicalized =
+                    prog_config_dir_path.canonicalize().with_context(|| {
+                        anyhow!("Failed to canonicalize symlink {}, which is supposed to be programme config directory.", prog_config_dir_path.display())
+                    })?;
+                if !prog_config_dir_canonicalized.is_dir() {
+                    return Err(anyhow!(error::Error::new_config_dir_is_file(
+                        prog_config_dir_canonicalized
+                    )));
+                }
+            }
+        }
+        // This means that file doesn't exist if it is not a symlink. Logic needs to be implemented to handle this case.
+        Ok(false) => {
+            if prog_config_dir_path.is_symlink() {
+                std::fs::remove_file(&prog_config_dir_path).with_context(|| {
+                    anyhow!(
+                        "Failed to remove broken symlink {}",
+                        prog_config_dir_path.display()
+                    )
+                })?;
+                std::fs::create_dir(&prog_config_dir_path).with_context(|| {
+                    anyhow!(
+                        "Failed to create programme config directory at {}",
+                        prog_config_dir_path.display()
+                    )
+                })?;
+            }
+            std::fs::create_dir(&prog_config_dir_path).with_context(|| {
+                anyhow!(
+                    "Failed to create programme config directory at {}",
+                    prog_config_dir_path.display()
+                )
+            })?;
+        }
+        Err(e) => {
+            return Err(anyhow!(
+                "Failed to check the existence of programme config directory at {}: {}",
+                prog_config_dir_path.display(),
+                e
+            ));
+        }
+    }
+
+    // detect and read config file
+    let mut config_file = match std::fs::exists(&config_file_path) {
+        Ok(true) => Ok(std::fs::File::open(&config_file_path).with_context(|| {
+            anyhow!(
+                "Failed to read config file at {}",
+                config_file_path.display()
+            )
+        })?),
+        Ok(false) => match config_dir.is_symlink() {
+            true => {
+                let config_file_canonicalised =
+                    config_file_path.canonicalize().with_context(|| {
+                        anyhow!(
+                            "Failed to canonicalise config file path {}",
+                            config_file_path.display()
+                        )
+                    })?;
+                Ok(
+                    std::fs::File::open(&config_file_canonicalised).with_context(|| {
+                        anyhow!(
+                            "Failed to create config file at {}",
+                            config_file_canonicalised.display()
+                        )
+                    })?,
+                )
+            }
+            false => {
+                let mut file = std::fs::File::create(&config_file_path).with_context(|| {
+                    anyhow!(
+                        "Failed to create config file at {}",
+                        config_file_path.display()
+                    )
+                })?;
+
+                let toml_content = toml::to_string(&storage::Settings {
+                    ai_accounts: None,
+                    behaviour: None,
+                    appearance: Some(storage::Appearance {
+                        colour_theme: storage::ColourTheme::Auto,
+                    }),
+                })?;
+
+                file.write_all(toml_content.as_bytes()).with_context(|| {
+                    anyhow!(
+                        "Failed to write to config file at {}",
+                        config_file_path.display()
+                    )
+                })?;
+
+                Ok(file)
+            }
+        },
+        Err(e) => Err(anyhow!(
+            "Failed to check the existence of programme config file at {}: {}",
+            prog_config_dir_path.display(),
+            e
+        )),
+    }?;
+
+    let mut config_setting_string = String::new();
+    config_file
+        .read_to_string(&mut config_setting_string)
+        .with_context(|| {
+            anyhow!(
+                "Failed to read config file at {}",
+                config_file_path.display()
+            )
+        })?;
+
+    let config_setting: storage::Settings =
+        toml::from_str::<storage::Settings>(&config_setting_string).with_context(|| {
+            anyhow!(
+                "Failed to deserialize config file at {}",
+                config_file_path.display()
+            )
+        })?;
+
+    println!("Config file content: {:?}", config_setting);
+    Ok(config_setting)
+}
 
 #[derive(strum::Display)]
 pub enum Language {

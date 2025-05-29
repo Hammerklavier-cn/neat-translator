@@ -22,7 +22,7 @@ slint::include_modules!();
 pub fn run() -> Result<(), slint::PlatformError> {
     // First initialise and load api-keys, etc.
     let profile = match backends::initialise() {
-        Ok(_) => {}
+        Ok(s) => s,
         Err(e) => {
             let error_window = ErrorWindow::new()?;
 
