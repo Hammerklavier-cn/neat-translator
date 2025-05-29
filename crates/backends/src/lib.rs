@@ -22,7 +22,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Error, Result, anyhow};
 use dirs;
 use reqwest::{blocking::Client, header::HeaderMap};
 // use openai_api_rs::v1::api::OpenAIClient;
