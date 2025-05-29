@@ -71,6 +71,7 @@ pub(crate) struct RequestBody {
 pub(crate) struct ResponseBody {
     pub(crate) id: String,
     pub(crate) choices: Vec<ResponseChoice>,
+    // TODO: Implement the missing fields
 }
 
 #[derive(Deserialize, Debug)]
