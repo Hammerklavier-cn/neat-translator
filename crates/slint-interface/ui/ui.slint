@@ -42,8 +42,8 @@ export component ErrorWindow inherits ErrorWindow {
 }
 
 export component MainWindow inherits Window {
-    in-out property <string> original-text <=> original-textedit.text;
-    in-out property <string> translate-result <=> translated-textedit.text;
+    in-out property <string> original-text <=> sentence-original-textedit.text;
+    in-out property <string> sentence-translate-result <=> sentence-translated-textedit.text;
     in-out property <string> api-key: "sk-xx";
 
     min-height: 500px;
@@ -68,8 +68,8 @@ export component MainWindow inherits Window {
             }
 
             HorizontalLayout {
-            // Switch Light/Dark Mode
-            Switch {
+
+                Switch {     // Switch Light/Dark Mode
                     horizontal-stretch: 0;
                     text: @tr("Dark Mode");
                     checked: Palette.color-scheme == ColorScheme.dark;
@@ -78,13 +78,10 @@ export component MainWindow inherits Window {
                     }
                 }
 
-            // About Slint
-            Button {
+                Button {    // About Slint
                     text: @tr("About Slint");
                     clicked => {
-                    // Show about dialog
-                    // about-slint.show();
-                    Logic.show-about-slint()
+                        Logic.show-about-slint()
                     }
                 }
             }
@@ -105,7 +102,7 @@ export component MainWindow inherits Window {
 
             TabWidget {
 
-                Tab {
+                Tab {   // Word translation
                     title: "Word";
                     VerticalLayout {
                         HorizontalBox {
@@ -137,7 +134,7 @@ export component MainWindow inherits Window {
                     }
                 }
 
-                Tab {
+                Tab {   // Sentence translation
                     title: "Sentences";
 
                     private property <int> seconds: 1;
@@ -160,7 +157,7 @@ export component MainWindow inherits Window {
 
                     HorizontalBox {
                         alignment: LayoutAlignment.stretch;
-                        original-textedit := TextEdit {
+                        sentence-original-textedit := TextEdit {
                             width: 50%;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
@@ -181,7 +178,7 @@ export component MainWindow inherits Window {
                             key-pressed(event) => {
                                 if (event.modifiers.control && (event.text == "\n")) {
                                     debug("Pressed Ctrl + Enter");
-                                    Logic.translate-sentence(original-textedit.text);
+                                    Logic.translate-sentence(sentence-original-textedit.text);
                                     return EventResult.accept;
                                 } else {
                                     return EventResult.reject;
@@ -189,11 +186,11 @@ export component MainWindow inherits Window {
                             }
                         }
 
-                        translated-textedit := TextEdit {
+                        sentence-translated-textedit := Text {
                             width: 50%;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
-                            read-only: true;
+                            // read-only: true;
                         }
                     }
                 }
