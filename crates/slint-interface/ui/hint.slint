@@ -1,8 +1,8 @@
 export component ErrorWindow inherits Window {
     in property <string> text <=> t.text;
     in property <string> hint <=> title.text;
-    height: 100px;
-    width: 500px;
+    preferred-height: 100px;
+    preferred-width: 500px;
     VerticalLayout {
         title := Text {
             font-size: 24px;
