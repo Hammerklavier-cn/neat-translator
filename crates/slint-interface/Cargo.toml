@@ -8,7 +8,7 @@ backends = {path = "../backends"}
 
 slint = { version = "1.11", features = [
     "renderer-femtovg",
-    "backend-winit-wayland",
+    "backend-winit",
 ] }
 
 [build-dependencies]
