@@ -65,6 +65,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
             setting_window.show().unwrap();
         });
 
+    // Translate sentence
     main_window.global::<Logic>().on_translate_sentence({
         let main_window_weak_arc = main_window_weak_arc.clone();
 
@@ -82,7 +83,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
 
             let api_key = main_window.get_api_key().to_string();
 
-            // 使用线程池执行阻塞操作
+            // spawn a thread to avoid blocking the UI thread.
             std::thread::spawn(move || {
                 println!("api-key: {}", api_key);
                 let translator = backends::DeepSeekSentenceTranslator::new("sk-xx".to_string());
@@ -95,13 +96,11 @@ pub fn run() -> Result<(), slint::PlatformError> {
                     )
                     .unwrap_or_else(|e| format!("Translation failed: {}", e));
 
-                // 通过事件循环更新UI
+                // Update UI in the event loop
                 let _ = main_window_weak.upgrade_in_event_loop(move |handle| {
-                    handle.set_translate_result(translate_result.into())
+                    handle.set_sentence_translate_result(translate_result.into())
                 });
             });
-
-            // 立即返回空字符串占位符
         }
     });
 
