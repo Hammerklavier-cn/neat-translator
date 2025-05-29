@@ -9,3 +9,4 @@ log = "0.4.26"
 env_logger = "0.11.7"
 
 slint-interface = { path = "../slint-interface" }
+backends = { path = "../backends" }
