@@ -7,3 +7,14 @@ default = "crates/launcher"
 version = "0.1.0"
 edition = "2024"
 description = "A neat translator using APIs from Youdao and AI providers."
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+debug = "line-tables-only"
+
+[profile.minsize]
+inherits = "release"
+opt-level = "z"
+panic = "abort"
+debug = 0
