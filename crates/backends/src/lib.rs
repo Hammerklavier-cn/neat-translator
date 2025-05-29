@@ -13,12 +13,14 @@ mod tests {
     }
 }
 
-mod ai_interact;
+mod ai_interface;
 pub mod error;
 pub mod storage;
 
+use std::sync::mpsc::{self, Receiver};
+use std::thread;
 use std::{
-    io::{Read, Write},
+    io::{BufRead, BufReader, Read, Write},
     path::Path,
 };
 
@@ -212,6 +214,15 @@ pub trait SentenceTranslator: Translator {
     ) -> Result<String, Error>;
 }
 
+pub trait StreamSentenceTranslator: Translator {
+    fn stream_translate_sentence(
+        &self,
+        sentence: &str,
+        source_language: Language,
+        target_language: Language,
+    ) -> Result<Receiver<String>, Error>;
+}
+
 pub struct YoudaoDictionaryWordTranslator {
     api_key: String,
     web_address: String,
@@ -262,17 +273,17 @@ impl SentenceTranslator for DeepSeekSentenceTranslator {
         source_language: Language,
         target_language: Language,
     ) -> Result<String, Error> {
-        let request_body = ai_interact::RequestBody {
+        let request_body = ai_interface::deepseek::RequestBody {
             messages: vec![
-                ai_interact::Message {
-                    role: ai_interact::MsgRole::System.to_string(),
+                ai_interface::deepseek::Message {
+                    role: ai_interface::deepseek::MsgRole::System,
                     content: format!(
                         "{}。请从{}翻译为{}。",
                         &self.prompt, source_language, target_language
                     ),
                 },
-                ai_interact::Message {
-                    role: ai_interact::MsgRole::User.to_string(),
+                ai_interface::deepseek::Message {
+                    role: ai_interface::deepseek::MsgRole::User,
                     content: sentence.to_string(),
                 },
             ],
@@ -280,8 +291,8 @@ impl SentenceTranslator for DeepSeekSentenceTranslator {
             frequency_penalty: None,
             max_tokens: Some(self.max_tokens),
             presence_penalty: None,
-            response_format: Some(ai_interact::ResponseFormat {
-                type_: ai_interact::ResponseFormatObj::Text.to_string(),
+            response_format: Some(ai_interface::deepseek::ResponseFormat {
+                type_: ai_interface::deepseek::ResponseFormatObj::Text,
             }),
             stop: None,
             stream: false,
@@ -351,5 +362,87 @@ impl SentenceTranslator for DeepSeekSentenceTranslator {
         // }
 
         // Ok(result.choices[0].message.content.clone().unwrap())
+    }
+}
+impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
+    fn stream_translate_sentence(
+        &self,
+        sentence: &str,
+        source_language: Language,
+        target_language: Language,
+    ) -> Result<Receiver<String>, Error> {
+        let request_body = ai_interface::deepseek::RequestBody {
+            messages: vec![
+                ai_interface::deepseek::Message {
+                    role: ai_interface::deepseek::MsgRole::System,
+                    content: format!(
+                        "{}。请从{}翻译为{}。",
+                        &self.prompt, source_language, target_language
+                    ),
+                },
+                ai_interface::deepseek::Message {
+                    role: ai_interface::deepseek::MsgRole::User,
+                    content: sentence.to_string(),
+                },
+            ],
+            model: "deepseek-chat".to_string(),
+            frequency_penalty: None,
+            max_tokens: Some(self.max_tokens),
+            presence_penalty: None,
+            response_format: Some(ai_interface::deepseek::ResponseFormat {
+                type_: ai_interface::deepseek::ResponseFormatObj::Text,
+            }),
+            stop: None,
+            stream: true,
+            stream_options: None,
+            temperature: Some(1.3),
+            top_p: None,
+            tools: None,
+            tool_choice: None,
+            logprobs: Some(false),
+            top_logprobs: None,
+        };
+
+        let client = Client::new();
+        let response = client
+            .post(&self.web_address)
+            .headers({
+                let mut headers = HeaderMap::new();
+                headers.insert("Content-Type", "application/json".parse().unwrap());
+                headers.insert(
+                    "Authorization",
+                    format!("Bearer {}", self.api_key).parse().unwrap(),
+                );
+                headers
+            })
+            .bearer_auth(&self.api_key)
+            .json(&request_body)
+            .send()?;
+
+        // Process streaming response
+        let mut reader = BufReader::new(response);
+        let mut result = String::new();
+        let mut event_data = String::new();
+        let (tx, rx) = mpsc::channel::<String>();
+
+        thread::spawn(move || {
+            loop {
+                let mut line = String::new();
+                reader.read_line(&mut line).unwrap_or_else(|e| {
+                    eprintln!("Error reading line: {}", e);
+                    std::process::exit(1);
+                });
+                if line.starts_with("data:") {
+                    let data = line.trim_start_matches("data:").trim();
+                    if data == "[DONE]" {
+                        return;
+                    }
+                    // ...
+                }
+            }
+        });
+
+        return Err(anyhow!("Not implemented!"));
+        return Ok(rx);
     }
 }
