@@ -329,7 +329,29 @@ impl SentenceTranslator for DeepSeekSentenceTranslator {
             .json(&request_body)
             .send()?;
 
-        Ok(response.text()?)
+        let response_text = response.text()?;
+
+        let result =
+            match serde_json::from_str::<ai_interface::deepseek::ResponseBody>(&response_text) {
+                Ok(response_body) => {
+                    let mut messages: Vec<String> = Vec::new();
+                    for choice in response_body.choices {
+                        messages.push(choice.message.content.unwrap_or_default())
+                    }
+                    let message = messages.join("\n");
+                    message
+                }
+                Err(e) => {
+                    let t = format!(
+                        "Error parsing JSON response: {}.\nReceived: {}",
+                        e, response_text
+                    );
+                    eprintln!("{}", t);
+                    t
+                }
+            };
+
+        Ok(result)
 
         // let mut client = OpenAIClient::builder()
         //     .with_endpoint(&self.web_address)
