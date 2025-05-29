@@ -89,71 +89,82 @@ pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
     }
 
     // detect and read config file
-    let mut config_file = match std::fs::exists(&config_file_path) {
-        Ok(true) => Ok(std::fs::File::open(&config_file_path).with_context(|| {
-            anyhow!(
-                "Failed to read config file at {}",
-                config_file_path.display()
-            )
-        })?),
-        Ok(false) => match config_dir.is_symlink() {
-            true => {
-                let config_file_canonicalised =
-                    config_file_path.canonicalize().with_context(|| {
+    {
+        let config_file = match std::fs::exists(&config_file_path) {
+            Ok(true) => Ok(std::fs::File::open(&config_file_path).with_context(|| {
+                anyhow!(
+                    "Failed to read config file at {}",
+                    config_file_path.display()
+                )
+            })?),
+            Ok(false) => match config_dir.is_symlink() {
+                true => {
+                    let config_file_canonicalised =
+                        config_file_path.canonicalize().with_context(|| {
+                            anyhow!(
+                                "Failed to canonicalise config file path {}",
+                                config_file_path.display()
+                            )
+                        })?;
+                    Ok(
+                        std::fs::File::open(&config_file_canonicalised).with_context(|| {
+                            anyhow!(
+                                "Failed to create config file at {}",
+                                config_file_canonicalised.display()
+                            )
+                        })?,
+                    )
+                }
+                false => {
+                    let mut file = std::fs::File::create(&config_file_path).with_context(|| {
                         anyhow!(
-                            "Failed to canonicalise config file path {}",
+                            "Failed to create config file at {}",
                             config_file_path.display()
                         )
                     })?;
-                Ok(
-                    std::fs::File::open(&config_file_canonicalised).with_context(|| {
+
+                    let toml_content = toml::to_string(&storage::Settings {
+                        ai_accounts: None,
+                        behaviour: None,
+                        appearance: Some(storage::Appearance {
+                            colour_theme: storage::ColourTheme::Auto,
+                        }),
+                    })?;
+
+                    file.write_all(toml_content.as_bytes()).with_context(|| {
                         anyhow!(
-                            "Failed to create config file at {}",
-                            config_file_canonicalised.display()
+                            "Failed to write to config file at {}",
+                            config_file_path.display()
                         )
-                    })?,
-                )
-            }
-            false => {
-                let mut file = std::fs::File::create(&config_file_path).with_context(|| {
-                    anyhow!(
-                        "Failed to create config file at {}",
-                        config_file_path.display()
-                    )
-                })?;
+                    })?;
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                    Ok(file)
+                }
+            },
+            Err(e) => Err(anyhow!(
+                "Failed to check the existence of programme config file at {}: {}",
+                prog_config_dir_path.display(),
+                e
+            )),
+        }?;
+    }
 
-                let toml_content = toml::to_string(&storage::Settings {
-                    ai_accounts: None,
-                    behaviour: None,
-                    appearance: Some(storage::Appearance {
-                        colour_theme: storage::ColourTheme::Auto,
-                    }),
-                })?;
-
-                file.write_all(toml_content.as_bytes()).with_context(|| {
-                    anyhow!(
-                        "Failed to write to config file at {}",
-                        config_file_path.display()
-                    )
-                })?;
-
-                Ok(file)
-            }
-        },
-        Err(e) => Err(anyhow!(
-            "Failed to check the existence of programme config file at {}: {}",
-            prog_config_dir_path.display(),
+    let mut config_file = std::fs::File::open(&config_file_path).map_err(|e| {
+        anyhow!(
+            "Failed to open config file at {} after it has been initialised.: {}",
+            config_file_path.display(),
             e
-        )),
-    }?;
+        )
+    })?;
 
     let mut config_setting_string = String::new();
     config_file
         .read_to_string(&mut config_setting_string)
-        .with_context(|| {
+        .map_err(|e| {
             anyhow!(
-                "Failed to read config file at {}",
-                config_file_path.display()
+                "Failed to read config file at {} after it has been initialised.: {}",
+                config_file_path.display(),
+                e
             )
         })?;
 
