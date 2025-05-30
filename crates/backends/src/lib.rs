@@ -182,14 +182,14 @@ pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
 
 #[derive(strum::Display)]
 pub enum Language {
-    English,
     Chinese,
-    Spanish,
+    English,
     French,
     German,
     Russian,
     Japanese,
     Korean,
+    Spanish,
     Auto,
 }
 pub enum AiProvider {
