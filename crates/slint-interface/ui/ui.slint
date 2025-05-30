@@ -68,13 +68,21 @@ export component MainWindow inherits Window {
             }
 
             HorizontalLayout {
-
-                Switch {     // Switch Light/Dark Mode
-                    horizontal-stretch: 0;
-                    text: @tr("Dark Mode");
-                    checked: Palette.color-scheme == ColorScheme.dark;
-                    toggled => {
-                        Palette.color-scheme = !(Palette.color-scheme == ColorScheme.dark) ? ColorScheme.dark : ColorScheme.light;
+                Button { // Theme mode selector with dark, light, auto modes
+                    property <string> theme: "Auto";
+                    text: "Theme: " + self.theme;
+                    clicked => {
+                        if self.theme == "Auto" {
+                            self.theme = "Dark";
+                            Palette.color-scheme = ColorScheme.dark;
+                        } else if self.theme == "Dark" {
+                            self.theme = "Light";
+                            Palette.color-scheme = ColorScheme.light;
+                        } else if self.theme == "Light" {
+                            self.theme = "Auto";
+                            Palette.color-scheme = ColorScheme.unknown;
+                        }
+                        self.text = "Theme: " + self.theme;
                     }
                 }
 
