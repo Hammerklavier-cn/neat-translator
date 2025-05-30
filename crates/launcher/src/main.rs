@@ -1,3 +1,4 @@
+use backends::error;
 use log;
 use slint_interface;
 
@@ -26,6 +27,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Designated interface: {}",
         std::env::var(DEFAULT_INTERFACE).unwrap_or_else(|_| "slint".to_string())
     );
+
+    // if let Some(err) = backends::initialise().err() {
+    //     match err.downcast_ref::<backends::error::Error>() {
+    //         // TODO
+    //         Some(backends::error::Error::ConfigFileBadFormat(path, s)) => {
+    //             log::error!("No backend found");
+    //         }
+    //         _ => {}
+    //     }
+    // };
 
     Ok(slint_interface::run()?)
 }
