@@ -45,7 +45,9 @@ pub fn run() -> Result<(), slint::PlatformError> {
 
     let about_slint_window = AboutSlintWindow::new()?;
     let setting_window = SettingWindow::new()?;
+    let setting_window_weak_arc = Arc::new(setting_window.as_weak());
 
+    // Translate word
     main_window.global::<Logic>().on_translate_word(|text| {
         // Implement translation logic here
         println!("Translate Word: {}", text.to_uppercase());
@@ -58,6 +60,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
         about_slint_window.show().unwrap();
     });
 
+    // Show setting window
     main_window
         .global::<Logic>()
         .on_show_setting_window(move || {
@@ -68,32 +71,123 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // Translate sentence
     main_window.global::<Logic>().on_translate_sentence({
         let main_window_weak_arc = main_window_weak_arc.clone();
+        let setting_window_weak_arc = setting_window_weak_arc.clone();
 
-        move |text| {
-            let text = text.to_string();
-            println!("Translate {}", text);
-
-            if text == String::new() {
-                println!("Detect empty string, skip translating.");
-                return;
-            }
-
+        move |text, from_language, to_language, model| {
             let main_window_weak = main_window_weak_arc.clone();
             let main_window = main_window_weak.upgrade().unwrap();
 
-            let api_key = main_window.get_api_key().to_string();
+            // let api_key = main_window.get_api_key().to_string();
+            let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
+            let settings_from_slint = setting_window.get_settings_from_slint();
+
+            let text = text.to_string();
+            let from_language = from_language.to_string().to_lowercase();
+            let to_language = to_language.to_string().to_lowercase();
+            let model = model.to_string().to_lowercase();
+            println!(
+                "Translate {} from {} to {} with {}",
+                text, from_language, to_language, model
+            );
+
+            let from_language = match from_language.as_str() {
+                "chinese" => backends::Language::Chinese,
+                "english" => backends::Language::English,
+                "french" => backends::Language::French,
+                "german" => backends::Language::German,
+                "russian" => backends::Language::Russian,
+                "japanese" => backends::Language::Japanese,
+                "korean" => backends::Language::Korean,
+                "spanish" => backends::Language::Spanish,
+                _ => {
+                    eprintln!("Unsupported language: {}", from_language);
+                    let _ = main_window_weak_arc
+                        .clone()
+                        .upgrade_in_event_loop(move |handle| {
+                            handle.set_sentence_translate_result(
+                                format!("Error: Unsupported language: {}", from_language).into(),
+                            )
+                        });
+                    return;
+                }
+            };
+
+            let to_language = match to_language.as_str() {
+                "chinese" => backends::Language::Chinese,
+                "english" => backends::Language::English,
+                "french" => backends::Language::French,
+                "german" => backends::Language::German,
+                "russian" => backends::Language::Russian,
+                "japanese" => backends::Language::Japanese,
+                "korean" => backends::Language::Korean,
+                "spanish" => backends::Language::Spanish,
+                _ => {
+                    eprintln!("Unsupported language: {}", from_language);
+                    let _ = main_window_weak_arc
+                        .clone()
+                        .upgrade_in_event_loop(move |handle| {
+                            handle.set_sentence_translate_result(
+                                format!("Error: Unsupported language: {}", from_language).into(),
+                            )
+                        });
+                    return;
+                }
+            };
+
+            let translator: Box<dyn backends::SentenceTranslator + Send + Sync> = match model
+                .as_str()
+            {
+                "deepseek" => {
+                    let api_key = settings_from_slint.deepseek_api_key.to_string();
+                    Box::new(backends::DeepSeekSentenceTranslator::new(api_key))
+                }
+                "youdao" => {
+                    let _ = main_window_weak_arc
+                        .clone()
+                        .upgrade_in_event_loop(move |handle| {
+                            handle.set_sentence_translate_result(
+                                format!("Youdao api is not supported yet!").into(),
+                            )
+                        });
+                    return;
+                }
+                "qwen" => {
+                    let _ = main_window_weak_arc
+                        .clone()
+                        .upgrade_in_event_loop(move |handle| {
+                            handle.set_sentence_translate_result(
+                                format!("Qwen api is not supported yet!").into(),
+                            )
+                        });
+                    return;
+                }
+                _ => {
+                    let _ = main_window_weak_arc
+                        .clone()
+                        .upgrade_in_event_loop(move |handle| {
+                            handle.set_sentence_translate_result(format!("Unknown AI api").into())
+                        });
+                    return;
+                }
+            };
+
+            if text == String::new() {
+                println!("Detect empty string, skip translating.");
+                let _ = main_window_weak_arc
+                    .clone()
+                    .upgrade_in_event_loop(move |handle| {
+                        handle.set_sentence_translate_result("[empty]".into())
+                    });
+                return;
+            }
 
             // spawn a thread to avoid blocking the UI thread.
             std::thread::spawn(move || {
-                println!("api-key: {}", api_key);
-                let translator = backends::DeepSeekSentenceTranslator::new("sk-xx".to_string());
+                // println!("api-key: {}", api_key);
+                // let translator = backends::DeepSeekSentenceTranslator::new("sk-xx".to_string());
 
                 let translate_result = translator
-                    .translate_sentence(
-                        &text,
-                        backends::Language::English,
-                        backends::Language::Chinese,
-                    )
+                    .translate_sentence(&text, from_language, to_language)
                     .unwrap_or_else(|e| format!("Translation failed: {}", e));
 
                 // Update UI in the event loop
