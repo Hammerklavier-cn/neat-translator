@@ -1,4 +1,4 @@
-import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidget, TextEdit } from "std-widgets.slint";
+import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidget, TextEdit, ComboBox } from "std-widgets.slint";
 import { AboutSlintWindow } from "about.slint";
 import {SettingWindow} from "settings.slint";
 import { ErrorWindow } from "hint.slint";
@@ -29,12 +29,39 @@ export global Logic {
     pure callback translate-word(string) -> string;
     pure callback show-about-slint();
     pure callback show-setting-window();
-    pure callback translate-sentence(string);
+    pure callback translate-sentence(string, string, string, string);
+    pure callback load-settings();
+}
+
+// export enum LanguageFromSlint {
+//     chinese,
+//     english,
+//     german,
+//     french,
+//     unknown,
+// }
+
+// export enum AiModelFromSlint {
+//     deepseek,
+//     qwen,
+//     unknown,
+// }
+
+export struct Settings {
+    deepseek_api_key: string,
+    qwen_api_key: string,
 }
 
 export component AboutSlintWindow inherits AboutSlintWindow { }
 
-export component SettingWindow inherits SettingWindow { }
+export component SettingWindow inherits SettingWindow {
+
+    in property <Settings> settings-from-slint: { deepseek-api-key: self.deepseek-api-key, qwen-api-key: self.qwen-api-key };
+
+    save-button := Button {
+        text: "Save";
+    }
+}
 
 export component ErrorWindow inherits ErrorWindow {
     in-out property <string> error-text <=> self.text;
@@ -44,7 +71,19 @@ export component ErrorWindow inherits ErrorWindow {
 export component MainWindow inherits Window {
     in-out property <string> original-text <=> sentence-original-textedit.text;
     in-out property <string> sentence-translate-result <=> sentence-translated-textedit.text;
-    in-out property <string> api-key: "sk-xx";
+
+    private property <[string]> languages: [
+        "Chinese",
+        "English",
+        "French",
+        "German",
+        "Russian",
+        "Japanese",
+        "Korean",
+        "Spanish"
+    ];
+
+    private property <[string]> engines: ["DeepSeek", "Youdao", "Qwen"];
 
     min-height: 500px;
     preferred-height: self.min-height;
@@ -104,9 +143,10 @@ export component MainWindow inherits Window {
         }
 
         main-area := HorizontalBox {
-            property <length> left-fix-width: 100px;
+            // property <length> left-fix-width: 100px;
 
             alignment: LayoutAlignment.stretch;
+            // property <string> hello: "HELLO".to-lowercase();
 
             TabWidget {
 
@@ -163,23 +203,70 @@ export component MainWindow inherits Window {
                     //     }
                     // }
 
-                    HorizontalBox {
-                        alignment: LayoutAlignment.space-around;
+                    VerticalBox {
 
-                        Rectangle {
-                            width: 49%;
-                            Text {
-                                text: "Press [Ctrl + Enter] to translate";
-                                x: sentence-original-textedit.x + sentence-original-textedit.width - self.width;
-                                y: sentence-original-textedit.y + sentence-original-textedit.height - self.height;
-                                z: 1;
+                        HorizontalLayout {
+                            vertical-stretch: 0;
+                            alignment: LayoutAlignment.space-between;
+
+                            HorizontalLayout {
+                                height: sentence-translate-to-combobox.min-height;
+                                alignment: LayoutAlignment.center;
+                                Text {
+                                    vertical-alignment: TextVerticalAlignment.center;
+                                    text: "From";
+                                    font-size: 16px;
+                                }
+
+                                sentence-translate-from-combobox := ComboBox {
+                                    model: languages;
+                                    current-index: 0;
+                                }
+
+                                Text {
+                                    vertical-alignment: TextVerticalAlignment.center;
+                                    text: "To";
+                                    font-size: 16px;
+                                }
+
+                                sentence-translate-to-combobox := ComboBox {
+                                    model: languages;
+                                    current-index: 1;
+                                }
                             }
 
-                            sentence-original-textedit := TextEdit {
-                                width: 100%;
-                                height: 100%;
-                                font-size: 16px;
-                                wrap: TextWrap.word-wrap;
+                            HorizontalLayout {
+                                Text {
+                                    vertical-alignment: TextVerticalAlignment.center;
+                                    text: "Engine";
+                                    font-size: 16px;
+                                }
+
+                                sentence-engine-combobox := ComboBox {
+                                    model: engines;
+                                    current-index: 0;
+                                }
+                            }
+                        }
+
+                        HorizontalBox {
+                            vertical-stretch: 100;
+                            alignment: LayoutAlignment.space-around;
+
+                            Rectangle {
+                                width: 49%;
+                                Text {
+                                    text: "Press [Ctrl + Enter] to translate";
+                                    x: sentence-original-textedit.x + sentence-original-textedit.width - self.width;
+                                    y: sentence-original-textedit.y + sentence-original-textedit.height - self.height;
+                                    z: 1;
+                                }
+
+                                sentence-original-textedit := TextEdit {
+                                    width: 100%;
+                                    height: 100%;
+                                    font-size: 16px;
+                                    wrap: TextWrap.word-wrap;
 
                                 // edited(text) => {
                                 //     old-string = self.text;
@@ -194,22 +281,28 @@ export component MainWindow inherits Window {
                                 //     debug("text is edited to " + self.text);
                                 // }
 
-                                key-pressed(event) => {
-                                    if (event.modifiers.control && (event.text == "\n")) {
-                                        debug("Pressed Ctrl + Enter");
-                                        Logic.translate-sentence(sentence-original-textedit.text);
-                                        return EventResult.accept;
-                                    } else {
-                                        return EventResult.reject;
+                                    key-pressed(event) => {
+                                        if (event.modifiers.control && (event.text == "\n")) {
+                                            debug("Pressed Ctrl + Enter");
+                                            Logic.translate-sentence(
+                                                sentence-original-textedit.text,
+                                                sentence-translate-from-combobox.current-value,
+                                                sentence-translate-to-combobox.current-value,
+                                                sentence-engine-combobox.current-value);
+
+                                            return EventResult.accept;
+                                        } else {
+                                            return EventResult.reject;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        sentence-translated-textedit := Text {
-                            width: 49%;
-                            font-size: 16px;
-                            wrap: TextWrap.word-wrap;
+                            sentence-translated-textedit := Text {
+                                width: 49%;
+                                font-size: 16px;
+                                wrap: TextWrap.word-wrap;
+                            }
                         }
                     }
                 }
