@@ -164,41 +164,52 @@ export component MainWindow inherits Window {
                     // }
 
                     HorizontalBox {
-                        alignment: LayoutAlignment.stretch;
-                        sentence-original-textedit := TextEdit {
-                            width: 50%;
-                            font-size: 16px;
-                            wrap: TextWrap.word-wrap;
+                        alignment: LayoutAlignment.space-around;
 
-                            // edited(text) => {
-                            //     old-string = self.text;
-                            //     if (timer.running == true) {
-                            //         timer.running = false;
-                            //         timer.running = true;
-                            //         debug("Reactivate timer.")
-                            //     } else {
-                            //         timer.running = true;
-                            //         debug()
-                            //     }
-                            //     debug("text is edited to " + self.text);
-                            // }
+                        Rectangle {
+                            width: 49%;
+                            Text {
+                                text: "Press [Ctrl + Enter] to translate";
+                                x: sentence-original-textedit.x + sentence-original-textedit.width - self.width;
+                                y: sentence-original-textedit.y + sentence-original-textedit.height - self.height;
+                                z: 1;
+                            }
 
-                            key-pressed(event) => {
-                                if (event.modifiers.control && (event.text == "\n")) {
-                                    debug("Pressed Ctrl + Enter");
-                                    Logic.translate-sentence(sentence-original-textedit.text);
-                                    return EventResult.accept;
-                                } else {
-                                    return EventResult.reject;
+                            sentence-original-textedit := TextEdit {
+                                width: 100%;
+                                height: 100%;
+                                font-size: 16px;
+                                wrap: TextWrap.word-wrap;
+
+                                // edited(text) => {
+                                //     old-string = self.text;
+                                //     if (timer.running == true) {
+                                //         timer.running = false;
+                                //         timer.running = true;
+                                //         debug("Reactivate timer.")
+                                //     } else {
+                                //         timer.running = true;
+                                //         debug()
+                                //     }
+                                //     debug("text is edited to " + self.text);
+                                // }
+
+                                key-pressed(event) => {
+                                    if (event.modifiers.control && (event.text == "\n")) {
+                                        debug("Pressed Ctrl + Enter");
+                                        Logic.translate-sentence(sentence-original-textedit.text);
+                                        return EventResult.accept;
+                                    } else {
+                                        return EventResult.reject;
+                                    }
                                 }
                             }
                         }
 
                         sentence-translated-textedit := Text {
-                            width: 50%;
+                            width: 49%;
                             font-size: 16px;
                             wrap: TextWrap.word-wrap;
-                            // read-only: true;
                         }
                     }
                 }
