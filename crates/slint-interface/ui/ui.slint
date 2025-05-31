@@ -31,6 +31,7 @@ export global Logic {
     pure callback show-setting-window();
     pure callback translate-sentence(string, string, string, string);
     pure callback load-settings();
+    pure callback save-settings();
 }
 
 // export enum LanguageFromSlint {
@@ -56,15 +57,23 @@ export component AboutSlintWindow inherits AboutSlintWindow { }
 
 export component SettingWindow inherits SettingWindow {
 
-    in property <Settings> settings-from-slint: { deepseek-api-key: self.deepseek-api-key, qwen-api-key: self.qwen-api-key };
+    in-out property <Settings> settings-from-slint: { deepseek-api-key: self.deepseek-api-key, qwen-api-key: self.qwen-api-key };
 
-    public function sync-settings-from-slint() {
+    public function sync-settings-from-property() {
         self.deepseek-api-key = settings-from-slint.deepseek-api-key;
         self.qwen-api-key = settings-from-slint.qwen-api-key
+    }
+    public function sync-settings-property-from-attributes() {
+        settings-from-slint.deepseek-api-key = self.deepseek-api-key;
+        settings-from-slint.qwen-api-key = self.qwen-api-key;
     }
 
     save-button := Button {
         text: "Save";
+        clicked => {
+            sync-settings-property-from-attributes();
+            Logic.save-settings();
+        }
     }
 }
 
