@@ -33,7 +33,6 @@ use reqwest::{blocking::Client, header::HeaderMap};
 // use std::env;
 
 pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
-    // TODO
     let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
     let prog_config_dir_path = config_dir.join(Path::new("neat-translator.org"));
     let config_file_path = prog_config_dir_path.join(Path::new("config.toml"));
@@ -178,6 +177,39 @@ pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
 
     println!("Config file content: {:?}", config_setting);
     Ok(config_setting)
+}
+
+pub fn save_config(config_setting: &storage::Settings) -> Result<(), anyhow::Error> {
+    let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
+    let prog_config_dir_path = config_dir.join(Path::new("neat-translator.org"));
+    let config_file_path = prog_config_dir_path.join(Path::new("config.toml"));
+
+    let mut config_file = std::fs::File::create(&config_file_path).map_err(|e| {
+        anyhow!(
+            "Failed to create config file at {} after it has been initialised.: {}",
+            config_file_path.display(),
+            e
+        )
+    })?;
+
+    let config_setting_string = toml::to_string_pretty(&config_setting).with_context(|| {
+        anyhow!(
+            "Failed to serialize config file at {}",
+            config_file_path.display()
+        )
+    })?;
+
+    config_file
+        .write_all(config_setting_string.as_bytes())
+        .map_err(|e| {
+            anyhow!(
+                "Failed to write config file at {} after it has been initialised.: {}",
+                config_file_path.display(),
+                e
+            )
+        })?;
+
+    Ok(())
 }
 
 #[derive(strum::Display)]
