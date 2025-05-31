@@ -69,7 +69,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 }
                 .into(),
             });
-            handle.invoke_sync_settings_from_slint();
+            handle.invoke_sync_settings_from_property();
         });
 
     // Save settings from Slint
@@ -89,12 +89,76 @@ pub fn run() -> Result<(), slint::PlatformError> {
     });
 
     // Show setting window
-    main_window
-        .global::<Logic>()
-        .on_show_setting_window(move || {
+    main_window.global::<Logic>().on_show_setting_window({
+        let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
+        move || {
             println!("Show Setting Window");
             setting_window.show().unwrap();
-        });
+        }
+    });
+
+    // Save settings
+    setting_window.global::<Logic>().on_save_settings({
+        let setting_window_weak_arc = setting_window_weak_arc.clone();
+        move || {
+            println!("Save Settings");
+            let settings_from_slint = setting_window_weak_arc
+                .clone()
+                .upgrade()
+                .unwrap()
+                .get_settings_from_slint();
+
+            let setting: backends::storage::Settings = backends::storage::Settings {
+                ai_accounts: {
+                    let deepseek_api_key = settings_from_slint.deepseek_api_key.to_string();
+                    let qwen_api_key = settings_from_slint.qwen_api_key.to_string();
+                    if deepseek_api_key.is_empty() && qwen_api_key.is_empty() {
+                        None
+                    } else {
+                        Some(backends::storage::AiAccounts {
+                            deepseek: {
+                                if !deepseek_api_key.is_empty() {
+                                    Some(backends::storage::DeepSeek {
+                                        api_key: deepseek_api_key,
+                                    })
+                                } else {
+                                    None
+                                }
+                            },
+                            qwen: {
+                                if !qwen_api_key.is_empty() {
+                                    Some(backends::storage::Qwen {
+                                        api_key: qwen_api_key,
+                                    })
+                                } else {
+                                    None
+                                }
+                            },
+                        })
+                    }
+                },
+                behaviour: None,
+                appearance: None,
+            };
+
+            // write to disk
+            if let Err(e) = backends::save_config(&setting) {
+                eprintln!("Failed to save config: {}", e);
+
+                let error_window = ErrorWindow::new().unwrap();
+
+                error_window
+                    .as_weak()
+                    .upgrade_in_event_loop(move |window| {
+                        window.set_error_hint("Save config Error:".into());
+                        window.set_error_text(e.to_string().into());
+                    })
+                    .unwrap();
+
+                error_window.run().unwrap();
+            }
+        }
+    });
 
     // Translate sentence
     main_window.global::<Logic>().on_translate_sentence({
