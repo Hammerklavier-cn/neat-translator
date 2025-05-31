@@ -47,6 +47,34 @@ pub fn run() -> Result<(), slint::PlatformError> {
     let setting_window = SettingWindow::new()?;
     let setting_window_weak_arc = Arc::new(setting_window.as_weak());
 
+    // Update setting profile
+    let _ = setting_window_weak_arc
+        .clone()
+        .upgrade_in_event_loop(move |handle| {
+            handle.set_settings_from_slint(Settings {
+                deepseek_api_key: match profile.ai_accounts {
+                    Some(ref accounts) => match &accounts.deepseek {
+                        Some(deepseek) => &deepseek.api_key,
+                        None => "",
+                    },
+                    None => "",
+                }
+                .into(),
+                qwen_api_key: match profile.ai_accounts {
+                    Some(ref accounts) => match &accounts.qwen {
+                        Some(qwen) => &qwen.api_key,
+                        None => "",
+                    },
+                    None => "",
+                }
+                .into(),
+            });
+            handle.invoke_sync_settings_from_slint();
+        });
+
+    // Save settings from Slint
+    // TODO
+
     // Translate word
     main_window.global::<Logic>().on_translate_word(|text| {
         // Implement translation logic here
