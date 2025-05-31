@@ -58,6 +58,11 @@ export component SettingWindow inherits SettingWindow {
 
     in property <Settings> settings-from-slint: { deepseek-api-key: self.deepseek-api-key, qwen-api-key: self.qwen-api-key };
 
+    public function sync-settings-from-slint() {
+        self.deepseek-api-key = settings-from-slint.deepseek-api-key;
+        self.qwen-api-key = settings-from-slint.qwen-api-key
+    }
+
     save-button := Button {
         text: "Save";
     }
