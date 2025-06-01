@@ -142,47 +142,26 @@ pub(crate) struct CompletionTokensDetails {
     pub(crate) reasoning_tokens: u32,
 }
 
-// fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let api_key = env::var("DEEPSEEK_API_KEY")?;
+#[derive(Deserialize, Debug)]
+pub(crate) struct StreamResponseBody {
+    pub(crate) id: String,
+    pub(crate) choices: Vec<StreamResponseChoice>,
+    pub(crate) created: u64,
+    pub(crate) model: String,
+    pub(crate) system_fingerprint: String,
+    pub(crate) object: String,
+}
 
-//     let request_body = RequestBody {
-//         messages: vec![
-//             Message {
-//                 content: "You are a helpful assistant".to_string(),
-//                 role: "system".to_string(),
-//             },
-//             Message {
-//                 content: "Hi".to_string(),
-//                 role: "user".to_string(),
-//             },
-//         ],
-//         model: "deepseek-chat".to_string(),
-//         frequency_penalty: None,
-//         max_tokens: Some(2048),
-//         presence_penalty: None,
-//         response_format: Some(ResponseFormat {
-//             type_: "text".to_string(),
-//         }),
-//         stop: None,
-//         stream: false,
-//         stream_options: None,
-//         temperature: Some(1.),
-//         top_p: None,
-//         tools: None,
-//         tool_choice: Some("none".to_string()),
-//         logprobs: Some(false),
-//         top_logprobs: None,
-//     };
+#[derive(Deserialize, Debug)]
+pub(crate) struct StreamResponseChoice {
+    pub(crate) delta: StreamDelta,
+    pub(crate) finish_reason: Option<FinishReason>,
+    pub(crate) index: usize,
+}
 
-//     let client = Client::new();
-//     let response = client
-//         .post("https://api.deepseek.com/chat/completions")
-//         .header("Content-Type", "application/json")
-//         .header("Accept", "application/json")
-//         .bearer_auth(api_key)
-//         .json(&request_body)
-//         .send()?;
-
-//     println!("{}", response.text()?);
-//     Ok(())
-// }
+#[derive(Deserialize, Debug)]
+pub(crate) struct StreamDelta {
+    pub(crate) content: Option<String>,
+    pub(crate) reasoning_content: Option<String>,
+    pub(crate) role: Option<MsgRole>,
+}
