@@ -26,6 +26,7 @@ use std::{
 
 use anyhow::{Context, Error, Result, anyhow};
 use dirs;
+use reqwest::StatusCode;
 use reqwest::{blocking::Client, header::HeaderMap};
 // use openai_api_rs::v1::api::OpenAIClient;
 // use openai_api_rs::v1::chat_completion::{self, ChatCompletionMessage, ChatCompletionRequest};
@@ -474,10 +475,11 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
             .headers({
                 let mut headers = HeaderMap::new();
                 headers.insert("Content-Type", "application/json".parse().unwrap());
-                headers.insert(
-                    "Authorization",
-                    format!("Bearer {}", self.api_key).parse().unwrap(),
-                );
+                headers.insert("Accept", "application/json".parse().unwrap());
+                // headers.insert(
+                //     "Authorization",
+                //     format!("Bearer {}", self.api_key).parse().unwrap(),
+                // );
                 headers
             })
             .bearer_auth(&self.api_key)
@@ -485,6 +487,11 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
             .send()?;
 
         // Process streaming response
+        println!("HTTP status: {}", response.status());
+        if response.status() != StatusCode::OK {
+            eprintln!("HTTP error: {}", response.text().unwrap());
+            std::process::exit(1);
+        }
         let mut reader = BufReader::new(response);
         let mut result = String::new();
         let mut event_data = String::new();
@@ -497,17 +504,45 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
                     eprintln!("Error reading line: {}", e);
                     std::process::exit(1);
                 });
+                if line.is_empty() {
+                    continue;
+                }
+                println!("Received: `{}` from api", line);
                 if line.starts_with("data:") {
                     let data = line.trim_start_matches("data:").trim();
                     if data == "[DONE]" {
                         return;
+                    } else {
+                        match serde_json::from_str::<ai_interface::deepseek::StreamResponseBody>(
+                            &data,
+                        ) {
+                            Ok(response_body) => {
+                                for choice in response_body.choices {
+                                    tx.send(choice.delta.content.unwrap_or_default())
+                                        .unwrap_or_else(|e| {
+                                            eprintln!("Error sending message: {}", e);
+                                            std::process::exit(1);
+                                        });
+                                }
+                            }
+                            Err(e) => {
+                                let t = format!(
+                                    "Error parsing JSON response: {}.\nReceived: {}",
+                                    e, data
+                                );
+                                eprintln!("Error parsing JSON: {}", e);
+                                tx.send(t).unwrap_or_else(|e| {
+                                    eprintln!("Error sending error message: {}", e);
+                                    std::process::exit(1);
+                                });
+                                std::process::exit(1);
+                            }
+                        };
                     }
-                    // ...
                 }
             }
         });
 
-        return Err(anyhow!("Not implemented!"));
         return Ok(rx);
     }
 }
