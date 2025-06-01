@@ -298,10 +298,11 @@ export component MainWindow inherits Window {
                                 }
                             }
 
-                            sentence-translated-textedit := Text {
+                            sentence-translated-textedit := TextEdit {
                                 width: 49%;
                                 font-size: 16px;
                                 wrap: TextWrap.word-wrap;
+                                read-only: true;
                             }
                         }
                     }
