@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, mpsc};
 
 use backends::{SentenceTranslator, StreamSentenceTranslator};
 
@@ -82,6 +82,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
         text.to_uppercase().into()
     });
 
+    // Show about slint
     main_window.global::<Logic>().on_show_about_slint(move || {
         // Implement show about slint logic here
         println!("About Slint");
@@ -161,6 +162,14 @@ pub fn run() -> Result<(), slint::PlatformError> {
     });
 
     // Translate sentence
+    //
+    // Create a global Arc<Mutex<Receiver<String>>> pointer.
+    // The Receiver<String>> will be replaced with a new one every time
+    // the user sends a new callback.
+    // Note that the logic in StreamTranslator::stream_translate_sentence
+    // should be modified. It should handle the case when the rx is closed early.
+    let (_, rx) = mpsc::channel::<String>();
+    // Logic implementation
     main_window.global::<Logic>().on_translate_sentence({
         let main_window_weak_arc = main_window_weak_arc.clone();
         let setting_window_weak_arc = setting_window_weak_arc.clone();
