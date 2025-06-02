@@ -9,9 +9,16 @@ edition = "2024"
 description = "A neat translator using APIs from Youdao and AI providers."
 
 [profile.release]
+# lto = "thin"
+codegen-units = 16
+debug = "line-tables-only"
+
+[profile.best]
+inherits = "release"
 lto = "fat"
 codegen-units = 1
-debug = "line-tables-only"
+debug = 0
+
 
 [profile.minsize]
 inherits = "release"
