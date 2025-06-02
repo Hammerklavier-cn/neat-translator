@@ -20,6 +20,7 @@ mod tests {
 slint::include_modules!();
 
 pub fn run() -> Result<(), slint::PlatformError> {
+    log::info!("Using slint interface");
     // First initialise and load api-keys, etc.
     let profile = match backends::initialise() {
         Ok(s) => s,
@@ -174,16 +175,37 @@ pub fn run() -> Result<(), slint::PlatformError> {
         let main_window_weak_arc = main_window_weak_arc.clone();
         let rx_arc_mutex = rx_arc_mutex.clone();
         move || {
-            let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
-                let received_string = rx_arc_mutex.lock().unwrap().recv().unwrap();
-                handle.set_sentence_translate_result(received_string.into());
-            });
+            let mut received_flag: bool;
+            loop {
+                if let Some(received_string) = match rx_arc_mutex.try_lock() {
+                    Ok(rx) => {
+                        log::trace!("Successfully acquired lock");
+                        rx.try_recv().ok()
+                    }
+                    Err(_) => {
+                        log::trace!("Failed to acquire lock!");
+                        None
+                    }
+                } {
+                    received_flag = true;
+                    let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
+                        handle.set_sentence_translate_result(received_string.into());
+                    });
+                } else {
+                    received_flag = false;
+                }
+                if !received_flag {
+                    std::thread::sleep(std::time::Duration::from_millis(1000));
+                }
+            }
         }
     });
     // Logic implementation
     main_window.global::<Logic>().on_translate_sentence({
         let main_window_weak_arc = main_window_weak_arc.clone();
         let setting_window_weak_arc = setting_window_weak_arc.clone();
+
+        let rx_arc_mutex = rx_arc_mutex.clone();
 
         move |text, from_language, to_language, model| {
             let main_window_weak = main_window_weak_arc.clone();
@@ -213,13 +235,17 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 "spanish" => backends::Language::Spanish,
                 _ => {
                     eprintln!("Unsupported language: {}", from_language);
-                    let _ = main_window_weak_arc
-                        .clone()
-                        .upgrade_in_event_loop(move |handle| {
-                            handle.set_sentence_translate_result(
-                                format!("Error: Unsupported language: {}", from_language).into(),
-                            )
-                        });
+                    // let _ = main_window_weak_arc
+                    //     .clone()
+                    //     .upgrade_in_event_loop(move |handle| {
+                    //         handle.set_sentence_translate_result(
+                    //             format!("Error: Unsupported language: {}", from_language).into(),
+                    //         )
+                    //     });
+                    let (tx, rx) = mpsc::channel();
+                    *rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(format!("Error: Unsupported language: {}", from_language))
+                        .unwrap();
                     return;
                 }
             };
@@ -235,13 +261,10 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 "spanish" => backends::Language::Spanish,
                 _ => {
                     eprintln!("Unsupported language: {}", from_language);
-                    let _ = main_window_weak_arc
-                        .clone()
-                        .upgrade_in_event_loop(move |handle| {
-                            handle.set_sentence_translate_result(
-                                format!("Error: Unsupported language: {}", from_language).into(),
-                            )
-                        });
+                    let (tx, rx) = mpsc::channel();
+                    *rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(format!("Error: Unsupported language: {}", from_language))
+                        .unwrap();
                     return;
                 }
             };
@@ -314,79 +337,88 @@ pub fn run() -> Result<(), slint::PlatformError> {
                     Box::new(backends::DeepSeekSentenceTranslator::new(api_key))
                 }
                 "youdao" => {
-                    let _ = main_window_weak_arc
-                        .clone()
-                        .upgrade_in_event_loop(move |handle| {
-                            handle.set_sentence_translate_result(
-                                format!("Youdao api is not supported yet!").into(),
-                            )
-                        });
+                    // let _ = main_window_weak_arc
+                    //     .clone()
+                    //     .upgrade_in_event_loop(move |handle| {
+                    //         handle.set_sentence_translate_result(
+                    //             format!("Youdao api is not supported yet!").into(),
+                    //         )
+                    //     });
+                    // return;
+                    let (tx, rx) = mpsc::channel();
+                    *rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send("Youdao api is not supported yet!!".into()).unwrap();
                     return;
                 }
                 "qwen" => {
-                    let _ = main_window_weak_arc
-                        .clone()
-                        .upgrade_in_event_loop(move |handle| {
-                            handle.set_sentence_translate_result(
-                                format!("Qwen api is not supported yet!").into(),
-                            )
-                        });
+                    // let _ = main_window_weak_arc
+                    //     .clone()
+                    //     .upgrade_in_event_loop(move |handle| {
+                    //         handle.set_sentence_translate_result(
+                    //             format!("Qwen api is not supported yet!").into(),
+                    //         )
+                    //     });
+                    // return;
+                    let (tx, rx) = mpsc::channel();
+                    *rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send("Qwen api is not supported yet!!".into()).unwrap();
                     return;
                 }
                 _ => {
-                    let _ = main_window_weak_arc
-                        .clone()
-                        .upgrade_in_event_loop(move |handle| {
-                            handle.set_sentence_translate_result(format!("Unknown AI api").into())
-                        });
+                    let (tx, rx) = mpsc::channel();
+                    *rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send("Unknown AI api".into()).unwrap();
                     return;
                 }
             };
 
             if text == String::new() {
                 println!("Detect empty string, skip translating.");
-                let _ = main_window_weak_arc
-                    .clone()
-                    .upgrade_in_event_loop(move |handle| {
-                        handle.set_sentence_translate_result("[empty]".into())
-                    });
+                let (tx, rx) = mpsc::channel();
+                *rx_arc_mutex.lock().unwrap() = rx;
+                tx.send("[empty]".into()).unwrap();
                 return;
             }
 
             // update translation result with a spawned thread to avoid blocking the UI.
-            std::thread::spawn(move || {
-                let translate_result_rx = translator
-                    .stream_translate_sentence(&text, from_language, to_language)
-                    .unwrap();
+            std::thread::spawn({
+                let rx_arc_mutex = rx_arc_mutex.clone();
+                move || {
+                    let translate_result_rx = translator
+                        .stream_translate_sentence(&text, from_language, to_language)
+                        .unwrap();
 
-                let mut result = String::new();
-                let mut last_stream = String::new();
-                let mut this_stream = String::new();
+                    *rx_arc_mutex.lock().unwrap() = translate_result_rx;
 
-                // let smart_append = |last_stream: &str, this_stream: &str| {
-                //     if last_stream.is_empty() {
-                //         return this_stream.to_string();
-                //     } else if last_stream.is_ascii() || this_stream.is_ascii() {
-                //         return format!(" {}", this_stream);
-                //     } else {
-                //         return this_stream.to_string();
-                //     }
-                // };
+                    // let mut result = String::new();
+                    // let mut last_stream = String::new();
+                    // let mut this_stream = String::new();
 
-                for stream in translate_result_rx {
-                    this_stream = stream;
+                    // // let smart_append = |last_stream: &str, this_stream: &str| {
+                    // //     if last_stream.is_empty() {
+                    // //         return this_stream.to_string();
+                    // //     } else if last_stream.is_ascii() || this_stream.is_ascii() {
+                    // //         return format!(" {}", this_stream);
+                    // //     } else {
+                    // //         return this_stream.to_string();
+                    // //     }
+                    // // };
 
-                    result.push_str(&this_stream);
+                    // for stream in translate_result_rx {
+                    //     this_stream = stream;
 
-                    last_stream = this_stream.clone();
-                    this_stream = String::new();
+                    //     result.push_str(&this_stream);
 
-                    let _ = main_window_weak.upgrade_in_event_loop({
-                        let result = result.clone();
-                        move |handle| {
-                            handle.set_sentence_translate_result(result.into());
-                        }
-                    });
+                    //     last_stream = this_stream.clone();
+                    //     this_stream = String::new();
+
+                    //     let _ = main_window_weak.upgrade_in_event_loop({
+                    //         let result = result.clone();
+                    //         move |handle| {
+                    //             handle.set_sentence_translate_result(result.into());
+                    //         }
+                    //     });
+                    // }
                 }
             });
         }
