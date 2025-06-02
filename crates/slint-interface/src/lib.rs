@@ -1,4 +1,4 @@
-use std::sync::{Arc, mpsc};
+use std::sync::{Arc, Mutex, mpsc};
 
 use backends::{SentenceTranslator, StreamSentenceTranslator};
 
@@ -169,6 +169,17 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // Note that the logic in StreamTranslator::stream_translate_sentence
     // should be modified. It should handle the case when the rx is closed early.
     let (_, rx) = mpsc::channel::<String>();
+    let rx_arc_mutex = Arc::new(Mutex::new(rx));
+    std::thread::spawn({
+        let main_window_weak_arc = main_window_weak_arc.clone();
+        let rx_arc_mutex = rx_arc_mutex.clone();
+        move || {
+            let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
+                let received_string = rx_arc_mutex.lock().unwrap().recv().unwrap();
+                handle.set_sentence_translate_result(received_string.into());
+            });
+        }
+    });
     // Logic implementation
     main_window.global::<Logic>().on_translate_sentence({
         let main_window_weak_arc = main_window_weak_arc.clone();
