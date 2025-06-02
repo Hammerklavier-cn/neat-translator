@@ -10,6 +10,7 @@ slint = { version = "1.11", features = [
     "renderer-femtovg",
     "backend-winit",
 ] }
+log = "0.4.26"
 
 [build-dependencies]
 slint-build = "=1.11.0"
