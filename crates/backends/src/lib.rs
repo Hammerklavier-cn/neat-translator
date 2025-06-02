@@ -498,6 +498,7 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
         let (tx, rx) = mpsc::channel::<String>();
 
         thread::spawn(move || {
+            let mut content = String::new();
             loop {
                 let mut line = String::new();
                 reader.read_line(&mut line).unwrap_or_else(|e| {
@@ -507,7 +508,7 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
                 if line.is_empty() {
                     continue;
                 }
-                println!("Received: `{}` from api", line);
+                // println!("Received: `{}` from api", line);
                 if line.starts_with("data:") {
                     let data = line.trim_start_matches("data:").trim();
                     if data == "[DONE]" {
@@ -518,11 +519,14 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
                         ) {
                             Ok(response_body) => {
                                 for choice in response_body.choices {
-                                    tx.send(choice.delta.content.unwrap_or_default())
-                                        .unwrap_or_else(|e| {
-                                            eprintln!("Error sending message: {}", e);
-                                            std::process::exit(1);
-                                        });
+                                    content += &choice.delta.content.unwrap_or_default();
+                                }
+                                match tx.send(content.clone()) {
+                                    Ok(_) => (),
+                                    Err(e) => {
+                                        eprintln!("Error sending message: {}", e);
+                                        return;
+                                    }
                                 }
                             }
                             Err(e) => {
@@ -531,11 +535,13 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
                                     e, data
                                 );
                                 eprintln!("Error parsing JSON: {}", e);
-                                tx.send(t).unwrap_or_else(|e| {
-                                    eprintln!("Error sending error message: {}", e);
-                                    std::process::exit(1);
-                                });
-                                std::process::exit(1);
+                                match tx.send(t) {
+                                    Ok(_) => (),
+                                    Err(e) => {
+                                        eprintln!("Error sending error message: {}", e);
+                                        return;
+                                    }
+                                }
                             }
                         };
                     }
