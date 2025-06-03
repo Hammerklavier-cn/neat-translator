@@ -185,17 +185,19 @@ pub fn run() -> Result<(), slint::PlatformError> {
                     Err(_) => {
                         log::trace!("Failed to acquire lock!");
                         None
-                    }
+                    } // The mutex lock is dropped here
                 } {
                     received_flag = true;
                     let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
+                        // Update the UI with the received translation result immediately and swiftly
+                        // to avoid blocking the main thread.
                         handle.set_sentence_translate_result(received_string.into());
                     });
                 } else {
                     received_flag = false;
                 }
                 if !received_flag {
-                    std::thread::sleep(std::time::Duration::from_millis(1000));
+                    std::thread::sleep(std::time::Duration::from_millis(100));
                 }
             }
         }
