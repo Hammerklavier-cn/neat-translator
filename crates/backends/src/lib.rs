@@ -387,49 +387,6 @@ impl SentenceTranslator for DeepSeekSentenceTranslator {
             };
 
         Ok(result)
-
-        // let mut client = OpenAIClient::builder()
-        //     .with_endpoint(&self.web_address)
-        //     .with_api_key(&self.api_key)
-        //     .build()
-        //     .map_err(|e| anyhow::anyhow!("Client build error: {}", e))?;
-
-        // let req = ChatCompletionRequest::new(
-        //     String::from("deepseek-chat"),
-        //     vec![
-        //         ChatCompletionMessage {
-        //             role: chat_completion::MessageRole::system,
-        //             content: chat_completion::Content::Text(format!(
-        //                 "{}请从{}翻译为{}。",
-        //                 self.prompt, source_language, target_language
-        //             )),
-        //             name: None,
-        //             tool_calls: None,
-        //             tool_call_id: None,
-        //         },
-        //         ChatCompletionMessage {
-        //             role: chat_completion::MessageRole::user,
-        //             content: chat_completion::Content::Text(sentence.to_string()),
-        //             name: None,
-        //             tool_calls: None,
-        //             tool_call_id: None,
-        //         },
-        //     ],
-        // )
-        // .max_tokens(self.max_tokens);
-
-        // let result = client
-        //     .chat_completion(req)
-        //     .await
-        //     .map_err(|e| anyhow!("Chat completion error: {}", e))?;
-
-        // println!("Content: {:?}", result.choices[0].message.content);
-
-        // for (key, value) in client.headers.unwrap().iter() {
-        //     println!("{}: {:?}", key, value);
-        // }
-
-        // Ok(result.choices[0].message.content.clone().unwrap())
     }
 }
 impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
