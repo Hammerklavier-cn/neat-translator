@@ -237,13 +237,6 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 "spanish" => backends::Language::Spanish,
                 _ => {
                     eprintln!("Unsupported language: {}", from_language);
-                    // let _ = main_window_weak_arc
-                    //     .clone()
-                    //     .upgrade_in_event_loop(move |handle| {
-                    //         handle.set_sentence_translate_result(
-                    //             format!("Error: Unsupported language: {}", from_language).into(),
-                    //         )
-                    //     });
                     let (tx, rx) = mpsc::channel();
                     *rx_arc_mutex.lock().unwrap() = rx;
                     tx.send(format!("Error: Unsupported language: {}", from_language))
@@ -271,96 +264,18 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 }
             };
 
-            // let translator: Box<dyn backends::SentenceTranslator + Send + Sync> = match model
-            //     .as_str()
-            // {
-            //     "deepseek" => {
-            //         let api_key = settings_from_slint.deepseek_api_key.to_string();
-            //         Box::new(backends::DeepSeekSentenceTranslator::new(api_key))
-            //     }
-            //     "youdao" => {
-            //         let _ = main_window_weak_arc
-            //             .clone()
-            //             .upgrade_in_event_loop(move |handle| {
-            //                 handle.set_sentence_translate_result(
-            //                     format!("Youdao api is not supported yet!").into(),
-            //                 )
-            //             });
-            //         return;
-            //     }
-            //     "qwen" => {
-            //         let _ = main_window_weak_arc
-            //             .clone()
-            //             .upgrade_in_event_loop(move |handle| {
-            //                 handle.set_sentence_translate_result(
-            //                     format!("Qwen api is not supported yet!").into(),
-            //                 )
-            //             });
-            //         return;
-            //     }
-            //     _ => {
-            //         let _ = main_window_weak_arc
-            //             .clone()
-            //             .upgrade_in_event_loop(move |handle| {
-            //                 handle.set_sentence_translate_result(format!("Unknown AI api").into())
-            //             });
-            //         return;
-            //     }
-            // };
-
-            // if text == String::new() {
-            //     println!("Detect empty string, skip translating.");
-            //     let _ = main_window_weak_arc
-            //         .clone()
-            //         .upgrade_in_event_loop(move |handle| {
-            //             handle.set_sentence_translate_result("[empty]".into())
-            //         });
-            //     return;
-            // }
-
-            // // spawn a thread to avoid blocking the UI thread.
-            // std::thread::spawn(move || {
-            //     // println!("api-key: {}", api_key);
-            //     // let translator = backends::DeepSeekSentenceTranslator::new("sk-xx".to_string());
-
-            //     let translate_result = translator
-            //         .translate_sentence(&text, from_language, to_language)
-            //         .unwrap_or_else(|e| format!("Translation failed: {}", e));
-
-            //     // Update UI in the event loop
-            //     let _ = main_window_weak.upgrade_in_event_loop(move |handle| {
-            //         handle.set_sentence_translate_result(translate_result.into())
-            //     });
-            // });
-
             let translator: Box<dyn StreamSentenceTranslator + Send + Sync> = match model.as_str() {
                 "deepseek" => {
                     let api_key = settings_from_slint.deepseek_api_key.to_string();
                     Box::new(backends::DeepSeekSentenceTranslator::new(api_key))
                 }
                 "youdao" => {
-                    // let _ = main_window_weak_arc
-                    //     .clone()
-                    //     .upgrade_in_event_loop(move |handle| {
-                    //         handle.set_sentence_translate_result(
-                    //             format!("Youdao api is not supported yet!").into(),
-                    //         )
-                    //     });
-                    // return;
                     let (tx, rx) = mpsc::channel();
                     *rx_arc_mutex.lock().unwrap() = rx;
                     tx.send("Youdao api is not supported yet!!".into()).unwrap();
                     return;
                 }
                 "qwen" => {
-                    // let _ = main_window_weak_arc
-                    //     .clone()
-                    //     .upgrade_in_event_loop(move |handle| {
-                    //         handle.set_sentence_translate_result(
-                    //             format!("Qwen api is not supported yet!").into(),
-                    //         )
-                    //     });
-                    // return;
                     let (tx, rx) = mpsc::channel();
                     *rx_arc_mutex.lock().unwrap() = rx;
                     tx.send("Qwen api is not supported yet!!".into()).unwrap();
@@ -391,36 +306,6 @@ pub fn run() -> Result<(), slint::PlatformError> {
                         .unwrap();
 
                     *rx_arc_mutex.lock().unwrap() = translate_result_rx;
-
-                    // let mut result = String::new();
-                    // let mut last_stream = String::new();
-                    // let mut this_stream = String::new();
-
-                    // // let smart_append = |last_stream: &str, this_stream: &str| {
-                    // //     if last_stream.is_empty() {
-                    // //         return this_stream.to_string();
-                    // //     } else if last_stream.is_ascii() || this_stream.is_ascii() {
-                    // //         return format!(" {}", this_stream);
-                    // //     } else {
-                    // //         return this_stream.to_string();
-                    // //     }
-                    // // };
-
-                    // for stream in translate_result_rx {
-                    //     this_stream = stream;
-
-                    //     result.push_str(&this_stream);
-
-                    //     last_stream = this_stream.clone();
-                    //     this_stream = String::new();
-
-                    //     let _ = main_window_weak.upgrade_in_event_loop({
-                    //         let result = result.clone();
-                    //         move |handle| {
-                    //             handle.set_sentence_translate_result(result.into());
-                    //         }
-                    //     });
-                    // }
                 }
             });
         }
