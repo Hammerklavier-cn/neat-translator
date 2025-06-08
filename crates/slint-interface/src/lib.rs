@@ -79,14 +79,14 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // Translate word
     main_window.global::<Logic>().on_translate_word(|text| {
         // Implement translation logic here
-        println!("Translate Word: {}", text.to_uppercase());
+        log::trace!("Translate Word: {}", text.to_uppercase());
         text.to_uppercase().into()
     });
 
     // Show about slint
     main_window.global::<Logic>().on_show_about_slint(move || {
         // Implement show about slint logic here
-        println!("About Slint");
+        log::info!("Show About Slint window");
         about_slint_window.show().unwrap();
     });
 
@@ -94,7 +94,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
     main_window.global::<Logic>().on_show_setting_window({
         let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
         move || {
-            println!("Show Setting Window");
+            log::info!("Show Setting Window");
             setting_window.show().unwrap();
         }
     });
@@ -103,7 +103,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
     setting_window.global::<Logic>().on_save_settings({
         let setting_window_weak_arc = setting_window_weak_arc.clone();
         move || {
-            println!("Save Settings");
+            log::trace!("Save Settings");
             let settings_from_slint = setting_window_weak_arc
                 .clone()
                 .upgrade()
@@ -145,7 +145,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
 
             // write to disk
             if let Err(e) = backends::save_config(&setting) {
-                eprintln!("Failed to save config: {}", e);
+                log::error!("Failed to save config: {}", e);
 
                 let error_window = ErrorWindow::new().unwrap();
 
@@ -221,9 +221,12 @@ pub fn run() -> Result<(), slint::PlatformError> {
             let from_language = from_language.to_string().to_lowercase();
             let to_language = to_language.to_string().to_lowercase();
             let model = model.to_string().to_lowercase();
-            println!(
+            log::trace!(
                 "Translate {} from {} to {} with {}",
-                text, from_language, to_language, model
+                text,
+                from_language,
+                to_language,
+                model
             );
 
             let from_language = match from_language.as_str() {
@@ -236,7 +239,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 "korean" => backends::Language::Korean,
                 "spanish" => backends::Language::Spanish,
                 _ => {
-                    eprintln!("Unsupported language: {}", from_language);
+                    log::error!("Unsupported language: {}", from_language);
                     let (tx, rx) = mpsc::channel();
                     *rx_arc_mutex.lock().unwrap() = rx;
                     tx.send(format!("Error: Unsupported language: {}", from_language))
@@ -255,7 +258,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
                 "korean" => backends::Language::Korean,
                 "spanish" => backends::Language::Spanish,
                 _ => {
-                    eprintln!("Unsupported language: {}", from_language);
+                    log::error!("Unsupported language: {}", from_language);
                     let (tx, rx) = mpsc::channel();
                     *rx_arc_mutex.lock().unwrap() = rx;
                     tx.send(format!("Error: Unsupported language: {}", from_language))
@@ -290,7 +293,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
             };
 
             if text == String::new() {
-                println!("Detect empty string, skip translating.");
+                log::debug!("Detect empty string, skip translating.");
                 let (tx, rx) = mpsc::channel();
                 *rx_arc_mutex.lock().unwrap() = rx;
                 tx.send("[empty]".into()).unwrap();

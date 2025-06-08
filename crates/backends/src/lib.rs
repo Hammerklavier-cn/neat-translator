@@ -435,10 +435,6 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
                 let mut headers = HeaderMap::new();
                 headers.insert("Content-Type", "application/json".parse().unwrap());
                 headers.insert("Accept", "application/json".parse().unwrap());
-                // headers.insert(
-                //     "Authorization",
-                //     format!("Bearer {}", self.api_key).parse().unwrap(),
-                // );
                 headers
             })
             .bearer_auth(&self.api_key)
@@ -452,8 +448,6 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
             std::process::exit(1);
         }
         let mut reader = BufReader::new(response);
-        let mut result = String::new();
-        let mut event_data = String::new();
         let (tx, rx) = mpsc::channel::<String>();
 
         thread::spawn(move || {
