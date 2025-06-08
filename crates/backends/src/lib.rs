@@ -291,7 +291,12 @@ impl DeepSeekSentenceTranslator {
         Self {
             api_key,
             web_address: String::from("https://api.deepseek.com/chat/completions"),
-            supported_languages: vec![Language::English, Language::Chinese],
+            supported_languages: vec![
+                Language::English,
+                Language::Chinese,
+                Language::Russian,
+                Language::German,
+            ],
             prompt: String::from(
                 "请翻译以下句子。你只需要输出翻译结果，不要输出任何与翻译无关的内容。应注意用词应尽可能准确，不应改变原句的内容，同时恰到好处地还原原句的情感和写作风格。",
             ),
