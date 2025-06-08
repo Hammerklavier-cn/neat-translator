@@ -505,3 +505,54 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
         return Ok(rx);
     }
 }
+
+pub(crate) struct QwenWordSentenceTranslator {
+    api_key: String,
+    web_address: String,
+    supported_languages: Vec<Language>,
+    prompt: String,
+    max_tokens: u32,
+}
+impl QwenWordSentenceTranslator {
+    pub fn new(api_key: String) -> Self {
+        Self {
+            api_key,
+            web_address: "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
+                .to_string(),
+            supported_languages: vec![
+                Language::English,
+                Language::Chinese,
+                Language::Russian,
+                Language::German,
+                Language::Korean,
+                Language::Japanese,
+            ],
+            prompt: String::from(
+                "请翻译以下句子。你只需要输出翻译结果，不要输出任何与翻译无关的内容。应注意用词应尽可能准确，不应改变原句的内容，同时恰到好处地还原原句的情感和写作风格。",
+            ),
+            max_tokens: 129_024,
+        }
+    }
+}
+impl Translator for QwenWordSentenceTranslator {
+    fn get_url(&self) -> String {
+        return self.web_address.clone();
+    }
+    fn get_api_key(&self) -> String {
+        return self.api_key.clone();
+    }
+
+    fn save_api_key(&self) -> Result<(), anyhow::Error> {
+        return Err(anyhow!("Not implemented yet!"));
+    }
+}
+impl WordTranslator for QwenWordSentenceTranslator {
+    fn translate_word(
+        &self,
+        word: &str,
+        source_language: Language,
+        target_language: Language,
+    ) -> Result<String, Error> {
+        Err(anyhow!("Not implemented yet!"))
+    }
+}
