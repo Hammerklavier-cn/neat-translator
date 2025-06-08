@@ -220,7 +220,7 @@ export component MainWindow inherits Window {
 
                                 sentence-translate-from-combobox := ComboBox {
                                     model: languages;
-                                    current-index: 0;
+                                    current-index: 1;
                                 }
 
                                 Text {
@@ -231,7 +231,7 @@ export component MainWindow inherits Window {
 
                                 sentence-translate-to-combobox := ComboBox {
                                     model: languages;
-                                    current-index: 1;
+                                    current-index: 0;
                                 }
                             }
 
@@ -267,19 +267,6 @@ export component MainWindow inherits Window {
                                     height: 100%;
                                     font-size: 16px;
                                     wrap: TextWrap.word-wrap;
-
-                                // edited(text) => {
-                                //     old-string = self.text;
-                                //     if (timer.running == true) {
-                                //         timer.running = false;
-                                //         timer.running = true;
-                                //         debug("Reactivate timer.")
-                                //     } else {
-                                //         timer.running = true;
-                                //         debug()
-                                //     }
-                                //     debug("text is edited to " + self.text);
-                                // }
 
                                     key-pressed(event) => {
                                         if (event.modifiers.control && (event.text == "\n")) {
