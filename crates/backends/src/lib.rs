@@ -14,6 +14,7 @@ mod tests {
 }
 
 mod ai_interface;
+pub mod dict_interface;
 pub mod error;
 pub mod storage;
 
@@ -558,6 +559,40 @@ impl WordTranslator for QwenWordSentenceTranslator {
         source_language: Language,
         target_language: Language,
     ) -> Result<String, Error> {
+        use ai_interface::qwen::{Message, MsgRole, RequestBody};
+        let request_body = RequestBody {
+            model: "qwen3-235b-a22b".to_string(),
+            messages: vec![Message {
+                role: MsgRole::System,
+                content: format!(
+                    r#"
+                            请你翻译以下单词或词组，给出音标、解释、搭配和例句。以json格式输出。
+                            例：
+                                User:
+                                    hello
+                                Assistant:
+                                    {:?}
+                        "#,
+                    dict_interface::example_arrive_word_explanation()
+                ),
+            }],
+            temperature: Some(1.0),
+            top_p: Some(1.0),
+            top_k: Some(50),
+            enable_thinking: Some(false),
+            thinking_budget: None,
+            repetition_penalty: Some(1.0),
+            presence_penalty: Some(0.0),
+            max_tokens: Some(self.max_tokens),
+            seed: Some(42),
+            stream: Some(false),
+            incremental_output: Some(false),
+            response_format: None,
+            result_format: None,
+            tools: None,
+            tool_choice: None,
+            parallel_tool_calls: None,
+        };
         Err(anyhow!("Not implemented yet!"))
     }
 }
