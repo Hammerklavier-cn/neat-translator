@@ -13,8 +13,8 @@ pub(crate) enum MsgRole {
 /// Note: MsgRole.System must be at the first place.
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Message {
-    content: String,
-    role: MsgRole,
+    pub(crate) content: String,
+    pub(crate) role: MsgRole,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -42,97 +42,96 @@ pub(crate) enum ResultFormat {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Tool {
-    name: String,
-    description: String,
-    parameters: Vec<String>,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) parameters: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct RequestBody {
-    model: String,
-    messages: Vec<Message>,
-    temperature: Option<f32>,
-    top_p: Option<f32>,
-    top_k: Option<u32>,
-    enable_thinking: Option<bool>,
-    thinking_budget: Option<u32>,
-    repetition_penalty: Option<f32>,
-    presence_penalty: Option<f32>,
-    max_tokens: Option<u32>,
-    seed: Option<u32>,
-    stream: Option<bool>,
-    incremental_output: Option<bool>,
-    response_format: Option<ResponseFormat>,
-    result_format: Option<ResultFormat>,
-    tools: Option<Vec<Tool>>,
-    tool_choice: Option<String>,
-    parallel_tool_calls: Option<bool>,
+    pub(crate) model: String,
+    pub(crate) messages: Vec<Message>,
+    pub(crate) temperature: Option<f32>,
+    pub(crate) top_p: Option<f32>,
+    pub(crate) top_k: Option<u32>,
+    pub(crate) enable_thinking: Option<bool>,
+    pub(crate) thinking_budget: Option<u32>,
+    pub(crate) repetition_penalty: Option<f32>,
+    pub(crate) presence_penalty: Option<f32>,
+    pub(crate) max_tokens: Option<u32>,
+    pub(crate) seed: Option<u32>,
+    pub(crate) stream: Option<bool>,
+    pub(crate) incremental_output: Option<bool>,
+    pub(crate) response_format: Option<ResponseFormat>,
+    pub(crate) result_format: Option<ResultFormat>,
+    pub(crate) tools: Option<Vec<Tool>>,
+    pub(crate) tool_choice: Option<String>,
+    pub(crate) parallel_tool_calls: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ResponseOutput {
-    text: Option<String>,
-    finish_reason: Option<String>,
-    message: Option<Vec<ResponseChoice>>,
+    pub(crate) text: Option<String>,
+    pub(crate) finish_reason: Option<String>,
+    pub(crate) message: Option<Vec<ResponseChoice>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ResponseChoice {
-    finish_reason: Option<String>,
-    message: ResponseMessage,
+    pub(crate) finish_reason: Option<String>,
+    pub(crate) message: ResponseMessage,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ResponseMessage {
-    role: MsgRole,
-    content: Option<String>,
-    reasoning_content: Option<String>,
-    tool_calls: Option<Vec<ToolCall>>,
+    pub(crate) role: MsgRole,
+    pub(crate) content: Option<String>,
+    pub(crate) reasoning_content: Option<String>,
+    pub(crate) tool_calls: Option<Vec<ToolCall>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ToolCall {
-    id: String,
+    pub(crate) id: String,
     #[serde(rename = "type")]
-    type_: String,
-    function: Function,
+    pub(crate) type_: String,
+    pub(crate) function: Function,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Function {
-    name: String,
-    arguments: String,
-    index: i32,
-    id: String,
-    #[serde(rename = "type")]
-    type_: String,
+    pub(crate) name: String,
+    pub(crate) arguments: String,
+    pub(crate) index: i32,
+    pub(crate) id: String,
+    pub(crate) type_: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Usage {
-    input_tokens: u32,
-    output_tokens: u32,
-    total_tokens: u32,
-    output_tokens_details: Option<OutputTokensDetails>,
-    prompt_tokens_details: Option<PromptTokensDetails>,
+    pub(crate) input_tokens: u32,
+    pub(crate) output_tokens: u32,
+    pub(crate) total_tokens: u32,
+    pub(crate) output_tokens_details: Option<OutputTokensDetails>,
+    pub(crate) prompt_tokens_details: Option<PromptTokensDetails>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct OutputTokensDetails {
-    text_tokens: u32,
-    reasoning_tokens: u32,
+    pub(crate) text_tokens: u32,
+    pub(crate) reasoning_tokens: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct PromptTokensDetails {
-    cached_tokens: u32,
+    pub(crate) cached_tokens: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ResponseBody {
-    status_code: u16,
-    request_id: String,
-    code: String,
-    output: ResponseOutput,
-    usage: Usage,
+    pub(crate) status_code: u16,
+    pub(crate) request_id: String,
+    pub(crate) code: String,
+    pub(crate) output: ResponseOutput,
+    pub(crate) usage: Usage,
 }
