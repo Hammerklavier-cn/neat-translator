@@ -1,4 +1,4 @@
-import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidget, TextEdit, ComboBox } from "std-widgets.slint";
+import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidget, TextEdit, ComboBox, ScrollView } from "std-widgets.slint";
 import { AboutSlintWindow } from "about.slint";
 import {SettingWindow} from "settings.slint";
 import { ErrorWindow } from "hint.slint";
@@ -26,7 +26,7 @@ The structure is as followed:
 
 export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
-    pure callback translate-word(string) -> string;
+    pure callback translate-word(string);
     pure callback show-about-slint();
     pure callback show-setting-window();
     pure callback translate-sentence(string, string, string, string);
@@ -68,8 +68,16 @@ export component ErrorWindow inherits ErrorWindow {
     in-out property <string> error-hint <=> self.hint;
 }
 
+export enum WordTransType { word, phonetic, definition, explanation, idiom-and-phrase, example, example-translation, header }
+
+export struct WordTransResult {
+    type_: WordTransType,
+    text: string,
+}
+
 export component MainWindow inherits Window {
     in-out property <string> original-text <=> sentence-original-textedit.text;
+    in-out property <[WordTransResult]> word-trans-results;
     in-out property <string> sentence-translate-result <=> sentence-translated-textedit.text;
 
     private property <[string]> languages: [
@@ -157,7 +165,7 @@ export component MainWindow inherits Window {
                                 height: 50px;
                                 font-size: 24px;
                                 accepted => {
-                                    t-word.text = Logic.translate-word(search-line-edit.text);
+                                    Logic.translate-word(search-line-edit.text);
                                     search-line-edit.select-all();
                                     // Implement translation logic here
                                 }
@@ -166,16 +174,60 @@ export component MainWindow inherits Window {
                             Button {
                                 text: "Translate";
                                 clicked => {
-                                    t-word.text = Logic.translate-word(search-line-edit.text)
-                                    // Implement translation logic here
+                                    Logic.translate-word(search-line-edit.text);
                                 }
                             }
                         }
 
-                        t-word := Text {
-                            text: "";
-                            font-size: 16px;
-                            wrap: TextWrap.word-wrap;
+                        ScrollView {
+                            VerticalLayout {
+                                alignment: LayoutAlignment.start;
+
+                                for data in root.word-trans-results: HorizontalBox {
+                                    states [
+                                        word when data.type_ == WordTransType.word: {
+                                            t.font-size: 24px;
+                                            t.color: #ff584d;
+                                            t.font-weight: 700;
+                                            white-space.width: 5px;
+                                        }
+                                        phonetic when data.type_ == WordTransType.phonetic: {
+                                            t.font-size: 16px;
+                                            white-space.width: 10px;
+                                        }
+                                        definition when data.type_ == WordTransType.definition: {
+                                            t.font-size: 20px;
+                                            white-space.width: 15px;
+                                        }
+                                        explanation when data.type_ == WordTransType.explanation: {
+                                            t.font-size: 20px;
+                                            white-space.width: 15px;
+                                        }
+                                        idiom-and-phrase when data.type_ == WordTransType.idiom-and-phrase: {
+                                            t.font-size: 20px;
+                                            white-space.width: 15px;
+                                        }
+                                        example when data.type_ == WordTransType.example: {
+                                            t.font-size: 16px;
+                                            white-space.width: 15px;
+                                        }
+                                        example-translation when data.type_ == WordTransType.example-translation: {
+                                            t.font-size: 16px;
+                                            white-space.width: 15px;
+                                        }
+                                        header when data.type_ == WordTransType.header: {
+                                            t.font-size: 14px;
+                                            white-space.width: 0px;
+                                            t.color: #60cdff;
+                                        }
+                                    ]
+                                    white-space := Rectangle { }
+
+                                    t := Text {
+                                        text: data.text;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -291,6 +343,10 @@ export component MainWindow inherits Window {
                             }
                         }
                     }
+                }
+
+                Tab {
+                    title: "history";
                 }
             }
         }
