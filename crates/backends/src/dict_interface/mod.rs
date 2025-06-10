@@ -1,59 +1,59 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct WordExplanation {
-    pub(crate) word: String,
-    pub(crate) phonetics: Vec<String>,
-    pub(crate) explanations: Vec<Explanation>,
-    pub(crate) idioms: Option<Vec<Idiom>>,
-    pub(crate) phrasal_verbs: Option<Vec<String>>,
+pub struct WordExplanation {
+    pub word: String,
+    pub phonetics: Vec<String>,
+    pub explanations: Vec<Explanation>,
+    pub idioms: Option<Vec<Idiom>>,
+    pub phrasal_verbs: Option<Vec<PhrasalVerb>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Explanation {
-    pub(crate) phonetics: Option<Vec<String>>,
-    pub(crate) abbreviation: Option<String>,
-    pub(crate) explanation: String,
-    pub(crate) definition: String,
-    pub(crate) patterns: Option<Vec<String>>,
-    pub(crate) example: Option<Vec<Example>>,
+pub struct Explanation {
+    pub phonetics: Option<Vec<String>>,
+    pub abbreviation: Option<String>,
+    pub explanation: String,
+    pub definition: String,
+    pub patterns: Option<Vec<String>>,
+    pub examples: Option<Vec<Example>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Example {
-    pub(crate) example: String,
-    pub(crate) translation: String,
+pub struct Example {
+    pub example: String,
+    pub translation: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Idiom {
-    pub(crate) idiom: String,
-    pub(crate) explanation: String,
-    pub(crate) definition: String,
-    pub(crate) example: Option<Vec<Example>>,
+pub struct Idiom {
+    pub idiom: String,
+    pub explanation: String,
+    pub definition: String,
+    pub example: Option<Vec<Example>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct PhrasalVerb {
-    pub(crate) phrasal_verb: String,
-    pub(crate) explanation: String,
-    pub(crate) definition: String,
-    pub(crate) example: Option<Vec<Example>>,
+pub struct PhrasalVerb {
+    pub phrasal_verb: String,
+    pub explanation: String,
+    pub definition: String,
+    pub example: Option<Vec<Example>>,
 }
 
 // Example
-pub(crate) fn example_arrive_word_explanation() -> WordExplanation {
+pub fn example_arrive_word_explanation() -> WordExplanation {
     WordExplanation {
         word: "arrive".to_string(),
-        phonetics: vec!["əˈraɪv".to_string()],
+        phonetics: vec!["/əˈraɪv/".to_string()],
         explanations: vec![
             Explanation {
-                abbreviation: None,
-                phonetics: Some(vec!["əˈraɪv".to_string()]),
+                abbreviation: Some("arr.".to_string()),
+                phonetics: None,
                 explanation: "到达，抵达".to_string(),
                 definition: "to get to a place, especially at the end of a journey".to_string(),
                 patterns: Some(vec!["~/(at/in/on ...)".to_string()]),
-                example: Some(vec![
+                examples: Some(vec![
                     Example {
                         example: "The train will arrive on time.".to_string(),
                         translation: "火车将准时到达。".to_string(),
@@ -71,7 +71,7 @@ pub(crate) fn example_arrive_word_explanation() -> WordExplanation {
                 explanation: "（东西）送达；寄到".to_string(),
                 definition: "(of things) to be brought to sb".to_string(),
                 patterns: None,
-                example: Some(vec![
+                examples: Some(vec![
                     Example {
                         example: "A letter arrived for you this morning".to_string(),
                         translation: "今天早上来了一封给你的信".to_string(),
@@ -83,7 +83,7 @@ pub(crate) fn example_arrive_word_explanation() -> WordExplanation {
                 ]),
             },
         ],
-        idioms: Some(Idiom {
+        idioms: Some(vec![Idiom {
             idiom: "sb has arrived".to_string(),
             definition: "(informal) somebody has become successful".to_string(),
             explanation: "某人成功了".to_string(),
@@ -92,7 +92,7 @@ pub(crate) fn example_arrive_word_explanation() -> WordExplanation {
                     .to_string(),
                 translation: "被列入布克小说作品奖决选名单后，他知道自己成功了".to_string(),
             }]),
-        }),
+        }]),
         phrasal_verbs: Some(vec![PhrasalVerb {
             phrasal_verb: "arrive at sth".to_string(),
             explanation: "达成（协议）；作出（决议等）；得出（结论等）".to_string(),
