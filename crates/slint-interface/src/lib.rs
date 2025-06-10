@@ -1,6 +1,10 @@
-use std::sync::{Arc, Mutex, mpsc};
+use std::{
+    rc::Rc,
+    sync::{Arc, Mutex, mpsc},
+};
 
 use backends::{SentenceTranslator, StreamSentenceTranslator};
+use slint::{Model, ModelRc, VecModel};
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -77,10 +81,98 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // TODO
 
     // Translate word
-    main_window.global::<Logic>().on_translate_word(|text| {
-        // Implement translation logic here
-        log::trace!("Translate Word: {}", text.to_uppercase());
-        text.to_uppercase().into()
+    main_window.global::<Logic>().on_translate_word({
+        let main_window_weak_arc = main_window_weak_arc.clone();
+        move |text| {
+            // Implement translation logic here
+            log::trace!("Translate Word: {}", text.to_uppercase());
+
+            let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
+                let result = backends::dict_interface::example_arrive_word_explanation();
+
+                let mut results: Vec<WordTransResult> = Vec::new();
+                results.push(WordTransResult {
+                    text: "WORD".into(),
+                    type_: WordTransType::Header,
+                });
+                results.push(WordTransResult {
+                    text: result.word.into(),
+                    type_: WordTransType::Word,
+                });
+                results.push(WordTransResult {
+                    text: result.phonetics.join(", ").into(),
+                    type_: WordTransType::Phonetic,
+                });
+                results.push(WordTransResult {
+                    text: "EXPLANATION".into(),
+                    type_: WordTransType::Header,
+                });
+                let mut index = 0;
+                for explanation in result.explanations {
+                    index += 1;
+                    let mut text = format!("{}. ", index);
+                    if let Some(phonetics) = explanation.phonetics {
+                        text.push_str(&format!("{} ", phonetics.join(", ")));
+                    }
+                    if let Some(abbr) = explanation.abbreviation {
+                        text.push_str(&format!("(abbr. {}) ", abbr));
+                    }
+                    if let Some(patterns) = explanation.patterns {
+                        text.push_str(&format!("({})", patterns.join(", ")));
+                    }
+                    text.push_str(&format!("{} ", explanation.definition));
+                    results.push(WordTransResult {
+                        text: text.into(),
+                        type_: WordTransType::Explanation,
+                    });
+                    results.push(WordTransResult {
+                        text: explanation.explanation.into(),
+                        type_: WordTransType::Explanation,
+                    });
+                    if let Some(examples) = explanation.examples {
+                        for example in examples {
+                            results.push(WordTransResult {
+                                text: example.example.into(),
+                                type_: WordTransType::Example,
+                            });
+                            results.push(WordTransResult {
+                                text: example.translation.into(),
+                                type_: WordTransType::ExampleTranslation,
+                            });
+                        }
+                    }
+                }
+
+                if let Some(idioms) = result.idioms {
+                    results.push(WordTransResult {
+                        text: "IDIOMS".into(),
+                        type_: WordTransType::Header,
+                    });
+
+                    let mut index = 0;
+
+                    for idiom in idioms {
+                        index += 1;
+                        let mut text = format!("1. {}", idiom.idiom);
+                        results.push(WordTransResult {
+                            text: text.into(),
+                            type_: WordTransType::IdiomAndPhrase,
+                        });
+                        results.push(WordTransResult {
+                            text: idiom.explanation.into(),
+                            type_: WordTransType::Explanation,
+                        });
+                        results.push(WordTransResult {
+                            text: idiom.definition.into(),
+                            type_: WordTransType::Definition,
+                        });
+                    }
+                }
+
+                let vec_model_results = ModelRc::from(Rc::new(VecModel::from(results)));
+                handle.set_word_trans_results(ModelRc::from(vec_model_results));
+            });
+        }
     });
 
     // Show about slint
