@@ -465,6 +465,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
             let translator: Box<dyn StreamSentenceTranslator + Send + Sync> = match model.as_str() {
                 "deepseek" => {
                     let api_key = settings_from_slint.deepseek_api_key.to_string();
+                    log::info!("Got api_key from settings_from_slint: {}", api_key);
                     Box::new(backends::DeepSeekSentenceTranslator::new(api_key))
                 }
                 "youdao" => {
@@ -474,6 +475,8 @@ pub fn run() -> Result<(), slint::PlatformError> {
                     return;
                 }
                 "qwen" => {
+                    let api_key = settings_from_slint.qwen_api_key.to_string();
+                    log::info!("Got api_key from settings_from_slint: {}", api_key);
                     let (tx, rx) = mpsc::channel();
                     *rx_arc_mutex.lock().unwrap() = rx;
                     tx.send("Qwen api is not supported yet!!".into()).unwrap();
