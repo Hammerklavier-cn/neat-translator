@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WordExplanation {
     pub word: String,
-    pub phonetics: Vec<String>,
-    pub explanations: Vec<Explanation>,
+    pub phonetics: Option<Vec<String>>,
+    pub explanations: Option<Vec<Explanation>>,
     pub idioms: Option<Vec<Idiom>>,
     pub phrasal_verbs: Option<Vec<PhrasalVerb>>,
 }
@@ -45,8 +45,8 @@ pub struct PhrasalVerb {
 pub fn example_arrive_word_explanation() -> WordExplanation {
     WordExplanation {
         word: "arrive".to_string(),
-        phonetics: vec!["/əˈraɪv/".to_string()],
-        explanations: vec![
+        phonetics: Some(vec!["/əˈraɪv/".to_string()]),
+        explanations: Some(vec![
             Explanation {
                 abbreviation: Some("arr.".to_string()),
                 phonetics: None,
@@ -82,7 +82,7 @@ pub fn example_arrive_word_explanation() -> WordExplanation {
                     },
                 ]),
             },
-        ],
+        ]),
         idioms: Some(vec![Idiom {
             idiom: "sb has arrived".to_string(),
             definition: "(informal) somebody has become successful".to_string(),
