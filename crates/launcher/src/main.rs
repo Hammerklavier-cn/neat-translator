@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use backends::error;
 use log;
 use slint_interface;
