@@ -3,7 +3,10 @@ use std::{
     sync::{Arc, Mutex, mpsc},
 };
 
-use backends::{SentenceTranslator, StreamSentenceTranslator};
+use backends::{
+    QwenWordSentenceTranslator, SentenceTranslator, StreamSentenceTranslator, WordTranslator,
+    dict_interface::WordExplanation,
+};
 use slint::{Model, ModelRc, VecModel};
 
 pub fn add(left: u64, right: u64) -> u64 {
@@ -81,96 +84,198 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // TODO
 
     // Translate word
-    main_window.global::<Logic>().on_translate_word({
+    //
+    // Create a global Arc<Mutex<Receiver<WordExplanation>>> pointer.
+    // The Receiver<WordExplanation>> will be replaced by a new one every time
+    // the user sends a new callback to translate.
+    let (_, rx) = mpsc::channel::<WordExplanation>();
+    let wd_rx_arc_mutex = Arc::new(Mutex::new(rx));
+    std::thread::spawn({
         let main_window_weak_arc = main_window_weak_arc.clone();
-        move |text| {
-            // Implement translation logic here
-            log::trace!("Translate Word: {}", text.to_uppercase());
-
-            let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
-                let result = backends::dict_interface::example_arrive_word_explanation();
-
-                let mut results: Vec<WordTransResult> = Vec::new();
-                results.push(WordTransResult {
-                    text: "WORD".into(),
-                    type_: WordTransType::Header,
-                });
-                results.push(WordTransResult {
-                    text: result.word.into(),
-                    type_: WordTransType::Word,
-                });
-                results.push(WordTransResult {
-                    text: result.phonetics.join(", ").into(),
-                    type_: WordTransType::Phonetic,
-                });
-                results.push(WordTransResult {
-                    text: "EXPLANATION".into(),
-                    type_: WordTransType::Header,
-                });
-                let mut index = 0;
-                for explanation in result.explanations {
-                    index += 1;
-                    let mut text = format!("{}. ", index);
-                    if let Some(phonetics) = explanation.phonetics {
-                        text.push_str(&format!("{} ", phonetics.join(", ")));
+        let wd_rx_arc_mutex = wd_rx_arc_mutex.clone();
+        move || {
+            loop {
+                if let Some(received_we) = match wd_rx_arc_mutex.try_lock() {
+                    Ok(rx) => {
+                        log::trace!("Successfully acquired lock of WordExplanation.");
+                        rx.try_recv().ok()
                     }
-                    if let Some(abbr) = explanation.abbreviation {
-                        text.push_str(&format!("(abbr. {}) ", abbr));
+                    Err(_) => {
+                        log::trace!("Failed to acquire lock of WordExplanation.");
+                        None
                     }
-                    if let Some(patterns) = explanation.patterns {
-                        text.push_str(&format!("({})", patterns.join(", ")));
-                    }
-                    text.push_str(&format!("{} ", explanation.definition));
-                    results.push(WordTransResult {
-                        text: text.into(),
-                        type_: WordTransType::Explanation,
-                    });
-                    results.push(WordTransResult {
-                        text: explanation.explanation.into(),
-                        type_: WordTransType::Explanation,
-                    });
-                    if let Some(examples) = explanation.examples {
-                        for example in examples {
+                } {
+                    let _ = main_window_weak_arc.upgrade_in_event_loop(move |handle| {
+                        let mut results: Vec<WordTransResult> = Vec::new();
+                        results.push(WordTransResult {
+                            text: "WORD".into(),
+                            type_: WordTransType::Header,
+                        });
+                        results.push(WordTransResult {
+                            text: received_we.word.into(),
+                            type_: WordTransType::Word,
+                        });
+                        if let Some(phones) = received_we.phonetics {
                             results.push(WordTransResult {
-                                text: example.example.into(),
-                                type_: WordTransType::Example,
-                            });
-                            results.push(WordTransResult {
-                                text: example.translation.into(),
-                                type_: WordTransType::ExampleTranslation,
+                                text: phones.join(", ").into(),
+                                type_: WordTransType::Phonetic,
                             });
                         }
-                    }
-                }
+                        results.push(WordTransResult {
+                            text: "EXPLANATION".into(),
+                            type_: WordTransType::Header,
+                        });
+                        let mut index = 0;
+                        for explanation in received_we.explanations.unwrap_or_default() {
+                            index += 1;
+                            let mut text = format!("{}. ", index);
+                            if let Some(phonetics) = explanation.phonetics {
+                                text.push_str(&format!("{} ", phonetics.join(", ")));
+                            }
+                            if let Some(abbr) = explanation.abbreviation {
+                                text.push_str(&format!("(abbr. {}) ", abbr));
+                            }
+                            if let Some(patterns) = explanation.patterns {
+                                text.push_str(&format!("({})", patterns.join(", ")));
+                            }
+                            text.push_str(&format!("{} ", explanation.definition));
+                            results.push(WordTransResult {
+                                text: text.into(),
+                                type_: WordTransType::Explanation,
+                            });
+                            results.push(WordTransResult {
+                                text: explanation.explanation.into(),
+                                type_: WordTransType::Explanation,
+                            });
+                            if let Some(examples) = explanation.examples {
+                                for example in examples {
+                                    results.push(WordTransResult {
+                                        text: example.example.into(),
+                                        type_: WordTransType::Example,
+                                    });
+                                    results.push(WordTransResult {
+                                        text: example.translation.into(),
+                                        type_: WordTransType::ExampleTranslation,
+                                    });
+                                }
+                            }
+                        }
 
-                if let Some(idioms) = result.idioms {
-                    results.push(WordTransResult {
-                        text: "IDIOMS".into(),
-                        type_: WordTransType::Header,
+                        if let Some(idioms) = received_we.idioms {
+                            results.push(WordTransResult {
+                                text: "IDIOMS".into(),
+                                type_: WordTransType::Header,
+                            });
+
+                            let mut index = 0;
+
+                            for idiom in idioms {
+                                index += 1;
+                                let mut text = format!("1. {}", idiom.idiom);
+                                results.push(WordTransResult {
+                                    text: text.into(),
+                                    type_: WordTransType::IdiomAndPhrase,
+                                });
+                                results.push(WordTransResult {
+                                    text: idiom.explanation.into(),
+                                    type_: WordTransType::Explanation,
+                                });
+                                results.push(WordTransResult {
+                                    text: idiom.definition.into(),
+                                    type_: WordTransType::Definition,
+                                });
+                                for example in idiom.example.unwrap_or_default() {
+                                    results.push(WordTransResult {
+                                        text: example.example.into(),
+                                        type_: WordTransType::Example,
+                                    });
+                                    results.push(WordTransResult {
+                                        text: example.translation.into(),
+                                        type_: WordTransType::ExampleTranslation,
+                                    });
+                                }
+                            }
+                        }
+
+                        if let Some(phrasal_verbs) = received_we.phrasal_verbs {
+                            results.push(WordTransResult {
+                                text: "PHRASAL VERBS".into(),
+                                type_: WordTransType::Header,
+                            });
+
+                            let mut index = 0;
+
+                            for phrasal_verb in phrasal_verbs {
+                                index += 1;
+                                let mut text = format!("1. {}", phrasal_verb.phrasal_verb);
+                                results.push(WordTransResult {
+                                    text: text.into(),
+                                    type_: WordTransType::IdiomAndPhrase,
+                                });
+                                results.push(WordTransResult {
+                                    text: phrasal_verb.explanation.into(),
+                                    type_: WordTransType::Explanation,
+                                });
+                                results.push(WordTransResult {
+                                    text: phrasal_verb.definition.into(),
+                                    type_: WordTransType::Definition,
+                                });
+                                for example in phrasal_verb.example.unwrap_or_default() {
+                                    results.push(WordTransResult {
+                                        text: example.example.into(),
+                                        type_: WordTransType::Example,
+                                    });
+                                    results.push(WordTransResult {
+                                        text: example.translation.into(),
+                                        type_: WordTransType::ExampleTranslation,
+                                    });
+                                }
+                            }
+                        }
+
+                        let vec_model_results = ModelRc::from(Rc::new(VecModel::from(results)));
+                        handle.set_word_trans_results(ModelRc::from(vec_model_results));
                     });
-
-                    let mut index = 0;
-
-                    for idiom in idioms {
-                        index += 1;
-                        let mut text = format!("1. {}", idiom.idiom);
-                        results.push(WordTransResult {
-                            text: text.into(),
-                            type_: WordTransType::IdiomAndPhrase,
-                        });
-                        results.push(WordTransResult {
-                            text: idiom.explanation.into(),
-                            type_: WordTransType::Explanation,
-                        });
-                        results.push(WordTransResult {
-                            text: idiom.definition.into(),
-                            type_: WordTransType::Definition,
-                        });
-                    }
                 }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+        }
+    });
+    //
+    main_window.global::<Logic>().on_translate_word({
+        let main_window_weak_arc = main_window_weak_arc.clone();
 
-                let vec_model_results = ModelRc::from(Rc::new(VecModel::from(results)));
-                handle.set_word_trans_results(ModelRc::from(vec_model_results));
+        let wd_rx_arc_mutex = wd_rx_arc_mutex.clone();
+
+        let setting_window_weak_arc = setting_window_weak_arc.clone();
+
+        move |text| {
+            // Implement translation logic here
+            log::info!("Translate Word: {}", text.to_uppercase());
+
+            let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
+            let settings_from_slint = setting_window.get_settings_from_slint();
+
+            let api_key = settings_from_slint.qwen_api_key.to_string();
+            log::info!("Got api_key from settings_from_slint: {}", api_key);
+            let translator = Box::new(QwenWordSentenceTranslator::new(api_key))
+                as Box<dyn WordTranslator + Send + Sync>;
+
+            let (tx, rx) = mpsc::channel();
+            *wd_rx_arc_mutex.lock().unwrap() = rx;
+
+            std::thread::spawn(move || {
+                let result = translator.translate_word(
+                    &text.to_string(),
+                    backends::Language::English,
+                    backends::Language::Chinese,
+                );
+                if let Err(e) = tx.send(result.unwrap()) {
+                    log::info!(
+                        "Error sending message, maybe because Receiver is dropped: {}",
+                        e
+                    );
+                }
             });
         }
     });
