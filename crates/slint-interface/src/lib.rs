@@ -259,17 +259,15 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // Create a global Arc<Mutex<Receiver<String>>> pointer.
     // The Receiver<String>> will be replaced with a new one every time
     // the user sends a new callback.
-    // Note that the logic in StreamTranslator::stream_translate_sentence
-    // should be modified. It should handle the case when the rx is closed early.
     let (_, rx) = mpsc::channel::<String>();
-    let rx_arc_mutex = Arc::new(Mutex::new(rx));
+    let st_rx_arc_mutex = Arc::new(Mutex::new(rx));
     std::thread::spawn({
         let main_window_weak_arc = main_window_weak_arc.clone();
-        let rx_arc_mutex = rx_arc_mutex.clone();
+        let st_rx_arc_mutex = st_rx_arc_mutex.clone();
         move || {
             let mut received_flag: bool;
             loop {
-                if let Some(received_string) = match rx_arc_mutex.try_lock() {
+                if let Some(received_string) = match st_rx_arc_mutex.try_lock() {
                     Ok(rx) => {
                         log::trace!("Successfully acquired lock");
                         rx.try_recv().ok()
@@ -299,7 +297,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
         let main_window_weak_arc = main_window_weak_arc.clone();
         let setting_window_weak_arc = setting_window_weak_arc.clone();
 
-        let rx_arc_mutex = rx_arc_mutex.clone();
+        let rx_arc_mutex = st_rx_arc_mutex.clone();
 
         move |text, from_language, to_language, model| {
             let main_window_weak = main_window_weak_arc.clone();
