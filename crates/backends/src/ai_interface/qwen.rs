@@ -48,19 +48,20 @@ pub(crate) struct Tool {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct RequestBody {
-    pub(crate) model: String,
+pub(crate) struct RequestInput {
     pub(crate) messages: Vec<Message>,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub(crate) struct RequestParameters {
     pub(crate) temperature: Option<f32>,
     pub(crate) top_p: Option<f32>,
     pub(crate) top_k: Option<u32>,
     pub(crate) enable_thinking: Option<bool>,
-    pub(crate) thinking_budget: Option<u32>,
     pub(crate) repetition_penalty: Option<f32>,
     pub(crate) presence_penalty: Option<f32>,
     pub(crate) max_tokens: Option<u32>,
     pub(crate) seed: Option<u32>,
-    pub(crate) stream: Option<bool>,
     pub(crate) incremental_output: Option<bool>,
     pub(crate) response_format: Option<ResponseFormat>,
     pub(crate) result_format: Option<ResultFormat>,
@@ -70,10 +71,19 @@ pub(crate) struct RequestBody {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct RequestBody {
+    pub(crate) model: String,
+    pub(crate) input: RequestInput,
+    pub(crate) thinking_budget: Option<u32>,
+    pub(crate) stream: Option<bool>,
+    pub(crate) parameters: Option<RequestParameters>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ResponseOutput {
     pub(crate) text: Option<String>,
     pub(crate) finish_reason: Option<String>,
-    pub(crate) message: Option<Vec<ResponseChoice>>,
+    pub(crate) choices: Option<Vec<ResponseChoice>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -129,9 +139,9 @@ pub(crate) struct PromptTokensDetails {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ResponseBody {
-    pub(crate) status_code: u16,
+    // pub(crate) status_code: u16,
     pub(crate) request_id: String,
-    pub(crate) code: String,
+    // pub(crate) code: String,
     pub(crate) output: ResponseOutput,
     pub(crate) usage: Usage,
 }
