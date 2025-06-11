@@ -184,8 +184,12 @@ export component MainWindow inherits Window {
                         }
 
                         ScrollView {
+                            horizontal-scrollbar-policy: ScrollBarPolicy.always-off;
+                            width: 100%;
+
                             VerticalLayout {
                                 alignment: LayoutAlignment.start;
+                                width: 100%;
 
                                 for data in root.word-trans-results: HorizontalBox {
                                     states [
@@ -226,10 +230,15 @@ export component MainWindow inherits Window {
                                             t.color: #60cdff;
                                         }
                                     ]
-                                    white-space := Rectangle { }
+                                    white-space := Rectangle {
+                                        horizontal-stretch: 0.;
+                                    }
 
                                     t := Text {
                                         text: data.text;
+                                        horizontal-stretch: 1.;
+                                        vertical-alignment: TextVerticalAlignment.center;
+                                        wrap: TextWrap.word-wrap;
                                     }
                                 }
                             }
