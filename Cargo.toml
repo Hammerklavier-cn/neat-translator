@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = [ "crates/backends","crates/gtk4-interface", "crates/launcher", "crates/slint-interface"]
+members = [
+    "crates/backends",
+    "crates/gtk4-interface",
+    "crates/launcher",
+    "crates/slint-interface",
+]
 default = "crates/launcher"
 
 [workspace.package]
@@ -24,4 +29,6 @@ debug = 0
 inherits = "release"
 opt-level = "z"
 panic = "abort"
+lto = "fat"
+codegen-units = 1
 debug = 0
