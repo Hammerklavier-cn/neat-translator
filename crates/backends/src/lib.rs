@@ -512,7 +512,7 @@ impl StreamSentenceTranslator for DeepSeekSentenceTranslator {
     }
 }
 
-pub(crate) struct QwenWordSentenceTranslator {
+pub struct QwenWordSentenceTranslator {
     api_key: String,
     web_address: String,
     supported_languages: Vec<Language>,
@@ -523,8 +523,9 @@ impl QwenWordSentenceTranslator {
     pub fn new(api_key: String) -> Self {
         Self {
             api_key,
-            web_address: "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
-                .to_string(),
+            web_address:
+                "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
+                    .to_string(),
             supported_languages: vec![
                 Language::English,
                 Language::Chinese,
@@ -536,7 +537,7 @@ impl QwenWordSentenceTranslator {
             prompt: String::from(
                 "请翻译以下句子。你只需要输出翻译结果，不要输出任何与翻译无关的内容。应注意用词应尽可能准确，不应改变原句的内容，同时恰到好处地还原原句的情感和写作风格。",
             ),
-            max_tokens: 129_024,
+            max_tokens: 8_192,
         }
     }
 }
@@ -559,40 +560,136 @@ impl WordTranslator for QwenWordSentenceTranslator {
         source_language: Language,
         target_language: Language,
     ) -> Result<dict_interface::WordExplanation, Error> {
-        use ai_interface::qwen::{Message, MsgRole, RequestBody};
-        let request_body = RequestBody {
-            model: "qwen3-235b-a22b".to_string(),
-            messages: vec![Message {
-                role: MsgRole::System,
-                content: format!(
-                    r#"
+        use ai_interface::qwen::{Message, MsgRole, RequestBody, RequestInput, RequestParameters};
+        let example_json =
+            serde_json::to_string_pretty(&dict_interface::example_arrive_word_explanation())
+                .map_err(|e| {
+                    anyhow!(
+                        "Failed to serialize {:?}: {:?}",
+                        dict_interface::example_arrive_word_explanation(),
+                        e
+                    )
+                })?;
+        let content_message = format!(
+            r#"
                             请你翻译以下单词或词组，给出音标、解释、搭配和例句。以json格式输出。
+                            若单词并不存在，你应回复一个最为接近的词语，并给出相应的解释；若没有相似的词语，按照我给定的json格式，只回复 {{word: $word}} 即可
+                            警告：你输出的内容应只包括json，诸如“```json```”等非json格式的内容会影响到结果解析。
+
                             例：
                                 User:
                                     hello
                                 Assistant:
-                                    {:?}
+                                    {}
                         "#,
-                    dict_interface::example_arrive_word_explanation()
-                ),
-            }],
-            temperature: Some(1.0),
-            top_p: Some(1.0),
-            top_k: Some(50),
-            enable_thinking: Some(false),
+            example_json
+        );
+        let request_body = RequestBody {
+            model: "qwen3-235b-a22b".to_string(),
+            input: RequestInput {
+                messages: vec![
+                    Message {
+                        role: MsgRole::System,
+                        content: content_message,
+                    },
+                    Message {
+                        role: MsgRole::User,
+                        content: word.to_string(),
+                    },
+                ],
+            },
             thinking_budget: None,
-            repetition_penalty: Some(1.0),
-            presence_penalty: Some(0.0),
-            max_tokens: Some(self.max_tokens),
-            seed: Some(42),
             stream: Some(false),
-            incremental_output: Some(false),
-            response_format: None,
-            result_format: None,
-            tools: None,
-            tool_choice: None,
-            parallel_tool_calls: None,
+            parameters: Some(RequestParameters {
+                temperature: Some(1.0),
+                top_p: None,
+                top_k: Some(50),
+                enable_thinking: Some(false),
+                repetition_penalty: Some(1.0),
+                presence_penalty: Some(0.0),
+                max_tokens: Some(self.max_tokens),
+                seed: None,
+                incremental_output: None,
+                response_format: None,
+                result_format: None,
+                tools: None,
+                tool_choice: None,
+                parallel_tool_calls: None,
+            }),
         };
-        Err(anyhow!("Not implemented yet!"))
+
+        let client = Client::new();
+        let response = client
+            .post(&self.web_address)
+            .headers({
+                let mut headers = HeaderMap::new();
+                headers.insert("Content-Type", "application/json".parse().unwrap());
+                headers.insert(
+                    "Authorization",
+                    format!("Bearer {}", self.api_key).parse().unwrap(),
+                );
+                headers
+            })
+            .json(&request_body)
+            .send()?;
+
+        log::info!("API key: {}", &self.api_key);
+
+        let response_status = response.status();
+
+        match response_status {
+            StatusCode::OK => {
+                log::info!("Response status: {}", response_status);
+                let response_text = response.text()?;
+
+                log::info!("Received: {}", response_text);
+
+                let result = match serde_json::from_str::<ai_interface::qwen::ResponseBody>(
+                    &response_text,
+                ) {
+                    Ok(response_body) => match response_body.output.text {
+                        Some(text) => Ok(text),
+                        None => match response_body.output.choices {
+                            Some(choices) => {
+                                let mut messages = Vec::new();
+                                for choice in choices {
+                                    if let Some(content) = choice.message.content {
+                                        messages.push(content);
+                                    }
+                                }
+                                Ok(messages.join(""))
+                            }
+                            None => Err(anyhow!("No valid output detected!")),
+                        },
+                    },
+                    Err(e) => Err(anyhow!("Failed to parse response: {}", e)),
+                }
+                .and_then(|text| {
+                    let text = text.trim();
+                    let text = if text.starts_with("```json") {
+                        text.trim_start_matches("```json").trim()
+                    } else {
+                        text
+                    };
+                    let text = if text.ends_with("```") {
+                        text.trim_end_matches("```").trim()
+                    } else {
+                        text
+                    };
+
+                    serde_json::from_str::<dict_interface::WordExplanation>(&text).map_err(|e| {
+                        anyhow!("Failed to deserialize AI output to WordExplanation: {}", e)
+                    })
+                });
+
+                result
+            }
+            _ => {
+                log::error!("API request failed: {}", response_status);
+                log::info!("Send: {}", serde_json::to_string(&request_body)?);
+                log::info!("Received: {}", response.text()?);
+                Err(anyhow!("API request failed: {}", response_status))
+            }
+        }
     }
 }
