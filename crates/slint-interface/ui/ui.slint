@@ -2,6 +2,7 @@ import { LineEdit, HorizontalBox, Button, VerticalBox, Palette, Switch, TabWidge
 import { AboutSlintWindow } from "about.slint";
 import {SettingWindow} from "settings.slint";
 import { ErrorWindow } from "hint.slint";
+import "./NotoSerifCJK-Regular.ttc";
 
 /*
 The structure is as followed:
@@ -76,6 +77,9 @@ export struct WordTransResult {
 }
 
 export component MainWindow inherits Window {
+
+    default-font-family: "Noto Sans CJK SC";
+
     in-out property <string> original-text <=> sentence-original-textedit.text;
     in-out property <[WordTransResult]> word-trans-results;
     in-out property <string> sentence-translate-result <=> sentence-translated-textedit.text;
@@ -193,6 +197,7 @@ export component MainWindow inherits Window {
                                         }
                                         phonetic when data.type_ == WordTransType.phonetic: {
                                             t.font-size: 16px;
+                                            t.font-family: "Arial";
                                             white-space.width: 10px;
                                         }
                                         definition when data.type_ == WordTransType.definition: {
