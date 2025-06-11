@@ -246,7 +246,7 @@ pub trait WordTranslator: Translator {
         word: &str,
         source_language: Language,
         target_language: Language,
-    ) -> Result<String, Error>;
+    ) -> Result<dict_interface::WordExplanation, Error>;
 }
 
 /// Trait for translating sentences.
@@ -558,7 +558,7 @@ impl WordTranslator for QwenWordSentenceTranslator {
         word: &str,
         source_language: Language,
         target_language: Language,
-    ) -> Result<String, Error> {
+    ) -> Result<dict_interface::WordExplanation, Error> {
         use ai_interface::qwen::{Message, MsgRole, RequestBody};
         let request_body = RequestBody {
             model: "qwen3-235b-a22b".to_string(),
