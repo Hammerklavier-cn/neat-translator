@@ -28,8 +28,6 @@ The structure is as followed:
 export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
     pure callback translate-word(string);
-    pure callback show-about-slint();
-    pure callback show-setting-window();
     pure callback translate-sentence(string, string, string, string);
     pure callback load-settings();
     pure callback save-settings();
@@ -44,11 +42,13 @@ export component AboutSlintWindow inherits AboutSlintWindow { }
 
 export component SettingWindow inherits SettingWindow {
 
+    title: "Settings";
+
     in-out property <Settings> settings-from-slint: { deepseek-api-key: self.deepseek-api-key, qwen-api-key: self.qwen-api-key };
 
     public function sync-settings-from-property() {
         self.deepseek-api-key = settings-from-slint.deepseek-api-key;
-        self.qwen-api-key = settings-from-slint.qwen-api-key
+        self.qwen-api-key = settings-from-slint.qwen-api-key;
     }
     public function sync-settings-property-from-attributes() {
         settings-from-slint.deepseek-api-key = self.deepseek-api-key;
@@ -65,6 +65,9 @@ export component SettingWindow inherits SettingWindow {
 }
 
 export component ErrorWindow inherits ErrorWindow {
+
+    title: "Error";
+
     in-out property <string> error-text <=> self.text;
     in-out property <string> error-hint <=> self.hint;
 }
@@ -77,6 +80,8 @@ export struct WordTransResult {
 }
 
 export component MainWindow inherits Window {
+
+    title: "Neat Translator";
 
     default-font-family: "Noto Sans CJK SC";
 
@@ -96,6 +101,9 @@ export component MainWindow inherits Window {
     ];
 
     private property <[string]> engines: ["DeepSeek", "Youdao", "Qwen"];
+
+    pure callback show-about-slint();
+    pure callback show-setting-window();
 
     min-height: 500px;
     preferred-height: self.min-height;
@@ -140,7 +148,7 @@ export component MainWindow inherits Window {
                 Button {    // About Slint
                     text: @tr("About Slint");
                     clicked => {
-                        Logic.show-about-slint()
+                        root.show-about-slint()
                     }
                 }
             }
@@ -149,7 +157,7 @@ export component MainWindow inherits Window {
             Button {
                 text: @tr("Settings");
                 clicked => {
-                    Logic.show-setting-window();
+                    root.show-setting-window();
                 }
             }
         }

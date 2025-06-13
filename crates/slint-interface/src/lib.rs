@@ -281,14 +281,14 @@ pub fn run() -> Result<(), slint::PlatformError> {
     });
 
     // Show about slint
-    main_window.global::<Logic>().on_show_about_slint(move || {
+    main_window.on_show_about_slint(move || {
         // Implement show about slint logic here
         log::info!("Show About Slint window");
         about_slint_window.show().unwrap();
     });
 
     // Show setting window
-    main_window.global::<Logic>().on_show_setting_window({
+    main_window.on_show_setting_window({
         let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
         move || {
             log::info!("Show Setting Window");
