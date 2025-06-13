@@ -1,4 +1,4 @@
-import { TabWidget, ScrollView, LineEdit, Button } from "std-widgets.slint";
+import { TabWidget, ScrollView, LineEdit, Button, ComboBox } from "std-widgets.slint";
 
 component ApiKeyStripe inherits HorizontalLayout {
     in property <string> api-name <=> api-name-text.text;
@@ -14,9 +14,24 @@ component ApiKeyStripe inherits HorizontalLayout {
     }
 }
 
+component EngineSelectStripe inherits HorizontalLayout {
+
+    in property <string> project-name-text <=> project-name-text.text;
+    in property <[string]> selector-model <=> selector.model;
+
+    project-name-text := Text {
+        width: 100px;  // This param needs tuning.
+        font-size: 16px;
+    }
+
+    selector := ComboBox { }
+}
+
 export component SettingWindow inherits Window {
     preferred-width: 400px;
     preferred-height: 250px;
+
+    private property <[string]> engines: ["DeepSeek", "Youdao", "Qwen"];
 
     in property <string> deepseek-api-key <=> deepseek-stripe.api-key;
     in property <string> qwen-api-key <=> qwen-stripe.api-key;
@@ -37,6 +52,23 @@ export component SettingWindow inherits Window {
                     qwen-stripe := ApiKeyStripe {
                         api-name: "Qwen";
                         api-key: "";
+                    }
+                }
+            }
+
+            Tab {
+                title: "Behaviour";
+                // True function is not implemented yet
+                VerticalLayout {
+                    alignment: LayoutAlignment.start;
+                    word-translation-stripe := EngineSelectStripe {
+                        project-name-text: "Word Translation";
+                        selector-model: engines;
+                    }
+
+                    sentence-translation-stripe := EngineSelectStripe {
+                        project-name-text: "Sentence Translation";
+                        selector-model: engines;
                     }
                 }
             }
