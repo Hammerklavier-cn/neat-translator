@@ -561,6 +561,7 @@ impl WordTranslator for QwenWordSentenceTranslator {
         target_language: Language,
     ) -> Result<dict_interface::WordExplanation, Error> {
         use ai_interface::qwen::{Message, MsgRole, RequestBody, RequestInput, RequestParameters};
+        log::debug!("Translate word: {}", word);
         let example_json =
             serde_json::to_string_pretty(&dict_interface::example_arrive_word_explanation())
                 .map_err(|e| {
@@ -575,10 +576,10 @@ impl WordTranslator for QwenWordSentenceTranslator {
                             请你翻译以下单词或词组，给出音标、解释、搭配和例句。以json格式输出。
                             若单词并不存在，你应回复一个最为接近的词语，并给出相应的解释；若没有相似的词语，按照我给定的json格式，只回复 {{word: $word}} 即可
                             警告：你输出的内容应只包括json，诸如“```json```”等非json格式的内容会影响到结果解析。
-
+                            注：可选的词性有：[`noun`, `verb`, `adj.`, `adv.`, `pron.`, `prep.`, `conj.`, `interj.`, `other`]
                             例：
                                 User:
-                                    hello
+                                    arrive
                                 Assistant:
                                     {}
                         "#,
