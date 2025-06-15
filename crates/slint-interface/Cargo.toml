@@ -11,6 +11,7 @@ slint = { version = "1.11", features = [
     "backend-winit",
 ] }
 log = "0.4.26"
+anyhow = { version = "1.0.98", features = ["backtrace"] }
 
 [build-dependencies]
 slint-build = "=1.11.0"
