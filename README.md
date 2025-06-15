@@ -2,7 +2,7 @@
 
 [English](README_en.md)
 
-使用有道词典、柯林斯等词典以及Qwen、DeepSeek等AI的API的翻译工具。
+使用~~有道词典、柯林斯等词典~~以及Qwen、DeepSeek等AI的API的翻译工具。
 
 基于 Rust + Slint 开发，提供跨平台支持，资源占用少，性能高，响应快，且不含任何广告。
 
