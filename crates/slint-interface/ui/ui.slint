@@ -38,7 +38,9 @@ export struct Settings {
     qwen_api_key: string,
 }
 
-export component AboutSlintWindow inherits AboutSlintWindow { }
+export component AboutSlintWindow inherits AboutSlintWindow {
+    title: "About Slint";
+}
 
 export component SettingWindow inherits SettingWindow {
 
@@ -72,11 +74,23 @@ export component ErrorWindow inherits ErrorWindow {
     in-out property <string> error-hint <=> self.hint;
 }
 
-export enum WordTransType { word, phonetic, definition, explanation, idiom-and-phrase, example, example-translation, header }
+export enum WordTransType {
+    word,
+    phonetic,
+    part-of-speech,
+    definition,
+    explanation,
+    idiom-and-phrase,
+    example,
+    example-translation,
+    header,
+    error
+}
 
 export struct WordTransResult {
     type_: WordTransType,
     text: string,
+    index: string,
 }
 
 export component MainWindow inherits Window {
@@ -206,30 +220,38 @@ export component MainWindow inherits Window {
                                             t.color: #ff584d;
                                             t.font-weight: 700;
                                             white-space.width: 5px;
+                                            index-text.width: 0px;
                                         }
                                         phonetic when data.type_ == WordTransType.phonetic: {
                                             t.font-size: 16px;
                                             t.font-family: "Arial";
                                             white-space.width: 10px;
+                                            index-text.width: 0px;
+                                        }
+                                        part-of-speech when data.type_ == WordTransType.part-of-speech: {
+                                            t.font-size: 14px;
+                                            t.color: #ff584d;
+                                            white-space.width: 10px;
+                                            index-text.width: 0px;
                                         }
                                         definition when data.type_ == WordTransType.definition: {
-                                            t.font-size: 20px;
+                                            t.font-size: 16px;
                                             white-space.width: 15px;
                                         }
                                         explanation when data.type_ == WordTransType.explanation: {
-                                            t.font-size: 20px;
+                                            t.font-size: 16px;
                                             white-space.width: 15px;
                                         }
                                         idiom-and-phrase when data.type_ == WordTransType.idiom-and-phrase: {
-                                            t.font-size: 20px;
+                                            t.font-size: 16px;
                                             white-space.width: 15px;
                                         }
                                         example when data.type_ == WordTransType.example: {
-                                            t.font-size: 16px;
+                                            t.font-size: 14px;
                                             white-space.width: 15px;
                                         }
                                         example-translation when data.type_ == WordTransType.example-translation: {
-                                            t.font-size: 16px;
+                                            t.font-size: 14px;
                                             white-space.width: 15px;
                                         }
                                         header when data.type_ == WordTransType.header: {
@@ -237,9 +259,21 @@ export component MainWindow inherits Window {
                                             white-space.width: 0px;
                                             t.color: #60cdff;
                                         }
+                                        error when data.type_ == WordTransType.error: {
+                                            t.font-size: 14px;
+                                            white-space.width: 0px;
+                                            index-text.width: 0px;
+                                            t.color: #ff0000;
+                                        }
                                     ]
                                     white-space := Rectangle {
                                         horizontal-stretch: 0.;
+                                    }
+
+                                    index-text := Text {
+                                        text: data.index;
+                                        width: 10px;
+                                        vertical-alignment: TextVerticalAlignment.center;
                                     }
 
                                     t := Text {
