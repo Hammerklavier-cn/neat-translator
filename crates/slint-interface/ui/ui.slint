@@ -27,7 +27,7 @@ The structure is as followed:
 
 export global Logic {
     // Implementation of this callback is seen in the business logic (Rust script).
-    pure callback translate-word(string);
+    pure callback translate-word(string, string, string, string);
     pure callback translate-sentence(string, string, string, string);
     pure callback load-settings();
     pure callback save-settings();
@@ -184,14 +184,63 @@ export component MainWindow inherits Window {
 
                 Tab {   // Word translation
                     title: "Word";
-                    VerticalLayout {
+                    VerticalBox {
+
+                        HorizontalLayout {
+                            vertical-stretch: 0;
+                            alignment: LayoutAlignment.space-between;
+
+                            HorizontalLayout {
+                                height: sentence-translate-to-combobox.min-height;
+                                alignment: LayoutAlignment.center;
+                                Text {
+                                    vertical-alignment: TextVerticalAlignment.center;
+                                    text: "From";
+                                    font-size: 16px;
+                                }
+
+                                word-translate-from-combobox := ComboBox {
+                                    model: languages;
+                                    current-index: 1;
+                                }
+
+                                Text {
+                                    vertical-alignment: TextVerticalAlignment.center;
+                                    text: "To";
+                                    font-size: 16px;
+                                }
+
+                                word-translate-to-combobox := ComboBox {
+                                    model: languages;
+                                    current-index: 0;
+                                }
+                            }
+
+                            HorizontalLayout {
+                                Text {
+                                    vertical-alignment: TextVerticalAlignment.center;
+                                    text: "Engine";
+                                    font-size: 16px;
+                                }
+
+                                word-engine-combobox := ComboBox {
+                                    model: engines;
+                                    current-index: 0;
+                                }
+                            }
+                        }
+
                         HorizontalBox {
                             max-height: search-line-edit.min-height;
                             search-line-edit := LineEdit {
                                 height: 50px;
                                 font-size: 24px;
                                 accepted => {
-                                    Logic.translate-word(search-line-edit.text);
+                                    Logic.translate-word(
+                                        search-line-edit.text,
+                                        word-translate-from-combobox.current-value,
+                                        word-translate-to-combobox.current-value,
+                                        word-engine-combobox.current-value);
                                     search-line-edit.select-all();
                                     // Implement translation logic here
                                 }
@@ -200,7 +249,11 @@ export component MainWindow inherits Window {
                             Button {
                                 text: "Translate";
                                 clicked => {
-                                    Logic.translate-word(search-line-edit.text);
+                                    Logic.translate-word(
+                                        search-line-edit.text,
+                                        word-translate-from-combobox.current-value,
+                                        word-translate-to-combobox.current-value,
+                                        word-engine-combobox.current-value);
                                 }
                             }
                         }
