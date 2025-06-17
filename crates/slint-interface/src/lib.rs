@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex, mpsc},
 };
 
-use anyhow::{Error, Result};
+use anyhow::{Error, Result, anyhow};
 use backends::{
     QwenWordSentenceTranslator, SentenceTranslator, StreamSentenceTranslator, WordTranslator,
     dict_interface::WordExplanation,
@@ -289,7 +289,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
             }
         }
     });
-    //
+    // `Logic.translate_word` callback
     main_window.global::<Logic>().on_translate_word({
         let main_window_weak_arc = main_window_weak_arc.clone();
 
@@ -297,27 +297,105 @@ pub fn run() -> Result<(), slint::PlatformError> {
 
         let setting_window_weak_arc = setting_window_weak_arc.clone();
 
-        move |text| {
+        move |text, from_language, to_language, model| {
             // Implement translation logic here
             log::info!("Translate Word: {}", text.to_uppercase());
 
             let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
             let settings_from_slint = setting_window.get_settings_from_slint();
 
-            let api_key = settings_from_slint.qwen_api_key.to_string();
-            log::info!("Got api_key from settings_from_slint: {}", api_key);
-            let translator = Box::new(QwenWordSentenceTranslator::new(api_key))
-                as Box<dyn WordTranslator + Send + Sync>;
+            let text = text.to_string();
+            let from_language = from_language.to_string().to_lowercase();
+            let to_language = to_language.to_string().to_lowercase();
+            let model = model.to_string().to_lowercase();
+            log::trace!(
+                "Translate {} from {} to {} with {}",
+                text,
+                from_language,
+                to_language,
+                model
+            );
+
+            let from_language = match from_language.as_str() {
+                "chinese" => backends::Language::Chinese,
+                "english" => backends::Language::English,
+                "french" => backends::Language::French,
+                "german" => backends::Language::German,
+                "russian" => backends::Language::Russian,
+                "japanese" => backends::Language::Japanese,
+                "korean" => backends::Language::Korean,
+                "spanish" => backends::Language::Spanish,
+                _ => {
+                    log::error!("Unsupported language: {}", from_language);
+                    let (tx, rx) = mpsc::channel();
+                    *wd_rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(Err(anyhow!(
+                        "Error: Unsupported language: {}",
+                        from_language
+                    )))
+                    .unwrap();
+                    return;
+                }
+            };
+
+            let to_language = match to_language.as_str() {
+                "chinese" => backends::Language::Chinese,
+                "english" => backends::Language::English,
+                "french" => backends::Language::French,
+                "german" => backends::Language::German,
+                "russian" => backends::Language::Russian,
+                "japanese" => backends::Language::Japanese,
+                "korean" => backends::Language::Korean,
+                "spanish" => backends::Language::Spanish,
+                _ => {
+                    log::error!("Unsupported language: {}", from_language);
+                    let (tx, rx) = mpsc::channel();
+                    *wd_rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(Err(anyhow!(
+                        "Error: Unsupported language: {}",
+                        from_language
+                    )))
+                    .unwrap();
+                    return;
+                }
+            };
+
+            let translator: Box<dyn WordTranslator + Send + Sync> = match model.as_str() {
+                "deepseek" => {
+                    let api_key = settings_from_slint.deepseek_api_key.to_string();
+                    log::info!("Got api_key from settings_from_slint: {}", api_key);
+                    let (tx, rx) = mpsc::channel();
+                    *wd_rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(Err(anyhow!("DeepSeek api is not supported yet!!")))
+                        .unwrap();
+                    return;
+                }
+                "youdao" => {
+                    let (tx, rx) = mpsc::channel();
+                    *wd_rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(Err(anyhow!("Youdao api is not supported yet!!")))
+                        .unwrap();
+                    return;
+                }
+                "qwen" => {
+                    let api_key = settings_from_slint.qwen_api_key.to_string();
+                    log::info!("Got api_key from settings_from_slint: {}", api_key);
+                    Box::new(QwenWordSentenceTranslator::new(api_key))
+                }
+                _ => {
+                    let (tx, rx) = mpsc::channel();
+                    *wd_rx_arc_mutex.lock().unwrap() = rx;
+                    tx.send(Err(anyhow!("Unknown AI api"))).unwrap();
+                    return;
+                }
+            };
 
             let (tx, rx) = mpsc::channel();
             *wd_rx_arc_mutex.lock().unwrap() = rx;
 
             std::thread::spawn(move || {
-                let result = translator.translate_word(
-                    &text.to_string(),
-                    backends::Language::English,
-                    backends::Language::Chinese,
-                );
+                let result =
+                    translator.translate_word(&text.to_string(), from_language, to_language);
                 if let Err(e) = tx.send(result) {
                     log::info!(
                         "Error sending message, maybe because Receiver is dropped: {}",
