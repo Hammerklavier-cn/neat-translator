@@ -4,14 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-backends = {path = "../backends"}
+backends = { path = "../backends" }
 
-slint = { version = "1.11", features = [
-    "renderer-femtovg",
-    "backend-winit",
-] }
+slint = { version = "1.12", features = ["renderer-femtovg", "backend-winit"] }
 log = "0.4.26"
 anyhow = { version = "1.0.98", features = ["backtrace"] }
 
 [build-dependencies]
-slint-build = "=1.11.0"
+slint-build = "1.12"
