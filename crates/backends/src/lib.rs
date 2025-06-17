@@ -573,17 +573,19 @@ impl WordTranslator for QwenWordSentenceTranslator {
                 })?;
         let content_message = format!(
             r#"
-                            请你翻译以下单词或词组，给出音标、解释、搭配和例句。以json格式输出。
+                            请你翻译以下{}单词或词组到{}，给出音标、解释、搭配和例句。以json格式输出。
                             若单词并不存在，你应回复一个最为接近的词语，并给出相应的解释；若没有相似的词语，按照我给定的json格式，只回复 {{word: $word}} 即可
                             警告：你输出的内容应只包括json，诸如“```json```”等非json格式的内容会影响到结果解析。
-                            注：可选的词性有：[`noun`, `verb`, `adj.`, `adv.`, `pron.`, `prep.`, `conj.`, `interj.`, `other`]
+                            注：
+                                1. 可选的词性有：[`noun`, `verb`, `adj.`, `adv.`, `pron.`, `prep.`, `conj.`, `interj.`, `other`]
+                                2. `definition` 字段应由单词相应的语言给出定义
                             例：
                                 User:
                                     arrive
                                 Assistant:
                                     {}
-                        "#,
-            example_json
+            "#,
+            source_language, target_language, example_json
         );
         let request_body = RequestBody {
             model: "qwen3-235b-a22b".to_string(),
