@@ -17,6 +17,7 @@ mod ai_interface;
 pub mod dict_interface;
 pub mod error;
 pub mod storage;
+mod utils;
 
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
@@ -35,7 +36,9 @@ use reqwest::{blocking::Client, header::HeaderMap};
 // use std::env;
 
 pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
-    let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
+    // let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
+    let config_dir = utils::config_path::get_config_dir()
+        .map_err(|e| anyhow!("Cannot locate config_dir: {}", e))?;
     let prog_config_dir_path = config_dir.join(Path::new("neat-translator.org"));
     let config_file_path = prog_config_dir_path.join(Path::new("config.toml"));
 
@@ -66,17 +69,18 @@ pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
                         prog_config_dir_path.display()
                     )
                 })?;
-                std::fs::create_dir(&prog_config_dir_path).with_context(|| {
-                    anyhow!(
-                        "Failed to create programme config directory at {}",
-                        prog_config_dir_path.display()
-                    )
-                })?;
+                // std::fs::create_dir(&prog_config_dir_path).with_context(|| {
+                //     anyhow!(
+                //         "Failed to create programme config directory at {}",
+                //         prog_config_dir_path.display()
+                //     )
+                // })?;
             }
-            std::fs::create_dir(&prog_config_dir_path).with_context(|| {
+            std::fs::create_dir_all(&prog_config_dir_path).map_err(|e| {
                 anyhow!(
-                    "Failed to create programme config directory at {}",
-                    prog_config_dir_path.display()
+                    "Failed to create config directory of the programme at {}\n Error: {}",
+                    prog_config_dir_path.display(),
+                    e
                 )
             })?;
         }
@@ -182,7 +186,9 @@ pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
 }
 
 pub fn save_config(config_setting: &storage::Settings) -> Result<(), anyhow::Error> {
-    let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
+    // let config_dir = dirs::config_dir().ok_or(anyhow!("Cannot locate config_dir!"))?;
+    let config_dir = utils::config_path::get_config_dir()
+        .map_err(|e| anyhow!("Cannot locate config_dir: {}", e))?;
     let prog_config_dir_path = config_dir.join(Path::new("neat-translator.org"));
     let config_file_path = prog_config_dir_path.join(Path::new("config.toml"));
 
