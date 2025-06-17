@@ -1,0 +1,1 @@
+OPENSSL_DIR=/home/jimmy/Downloads/openssl_3.5.0_arm64-v8a LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/jimmy/Downloads/openssl_3.5.0_arm64-v8a/lib/ ANDROID_HOME=$HOME/Android/Sdk ANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/29.0.13599879/ cargo apk build --release --target aarch64-linux-android --lib -p slint-interface
