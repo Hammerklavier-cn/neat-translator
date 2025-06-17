@@ -6,9 +6,26 @@ edition = "2024"
 [dependencies]
 backends = { path = "../backends" }
 
-slint = { version = "1.12", features = ["renderer-femtovg", "backend-winit"] }
+slint = { version = "1.12", features = [
+    "renderer-femtovg",
+    "backend-winit",
+    "backend-android-activity-06",
+] }
+env_logger = "0.11.7"
 log = "0.4.26"
 anyhow = { version = "1.0.98", features = ["backtrace"] }
 
 [build-dependencies]
 slint-build = "1.12"
+
+[[bin]]
+name = "neat-translator-slint"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.android.signing.release]
+path = "my-release-key.jks"
+key_password = "123456"
+keystore_password = "123456"
