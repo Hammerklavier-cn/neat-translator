@@ -11,9 +11,9 @@ slint = { version = "1.12", features = [
     "backend-winit",
     "backend-android-activity-06",
 ] }
-env_logger = "0.11.7"
-log = "0.4.26"
-anyhow = { version = "1.0.98", features = ["backtrace"] }
+env_logger.workspace = true
+log.workspace = true
+anyhow.workspace = true
 
 [build-dependencies]
 slint-build = "1.12"

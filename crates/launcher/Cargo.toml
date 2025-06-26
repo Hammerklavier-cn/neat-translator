@@ -9,8 +9,8 @@ name = "neat-translator"
 path = "src/main.rs"
 
 [dependencies]
-log = "0.4.26"
-env_logger = "0.11.7"
+log.workspace = true
+env_logger.workspace = true
 
 slint-interface = { path = "../slint-interface" }
 backends = { path = "../backends" }
