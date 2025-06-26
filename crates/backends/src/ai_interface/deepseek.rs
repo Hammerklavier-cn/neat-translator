@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{env, fmt::Display};
+use std::fmt::Display;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) enum MsgRole {
@@ -20,6 +20,7 @@ impl Display for MsgRole {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug)]
 pub(crate) enum ResponseFormatObj {
     #[serde(rename = "json_object")]
@@ -67,6 +68,7 @@ pub(crate) struct RequestBody {
     pub(crate) top_logprobs: Option<i32>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct ResponseBody {
     pub(crate) id: String,
@@ -78,6 +80,7 @@ pub(crate) struct ResponseBody {
     pub(crate) usage: Usage,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct ResponseChoice {
     pub(crate) index: u32,
@@ -86,6 +89,7 @@ pub(crate) struct ResponseChoice {
     pub(crate) logprobs: Option<Logprobs>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) enum FinishReason {
     #[serde(rename = "stop")]
@@ -100,6 +104,7 @@ pub(crate) enum FinishReason {
     InsufficientSystemResource,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct CompletionMessage {
     pub(crate) content: Option<String>,
@@ -107,11 +112,13 @@ pub(crate) struct CompletionMessage {
     pub(crate) role: MsgRole,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct Logprobs {
     pub(crate) content: Option<LogprobsContent>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct LogprobsContent {
     pub(crate) token: String,
@@ -120,6 +127,7 @@ pub(crate) struct LogprobsContent {
     pub(crate) top_logprobs: Vec<TopLogprob>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct TopLogprob {
     pub(crate) token: String,
@@ -127,6 +135,7 @@ pub(crate) struct TopLogprob {
     pub(crate) bytes: Option<Vec<u8>>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct Usage {
     pub(crate) completion_tokens: u32,
@@ -137,11 +146,13 @@ pub(crate) struct Usage {
     pub(crate) completion_tokens_details: Option<CompletionTokensDetails>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct CompletionTokensDetails {
     pub(crate) reasoning_tokens: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct StreamResponseBody {
     pub(crate) id: String,
@@ -152,6 +163,7 @@ pub(crate) struct StreamResponseBody {
     pub(crate) object: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct StreamResponseChoice {
     pub(crate) delta: StreamDelta,
@@ -159,6 +171,7 @@ pub(crate) struct StreamResponseChoice {
     pub(crate) index: usize,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct StreamDelta {
     pub(crate) content: Option<String>,
