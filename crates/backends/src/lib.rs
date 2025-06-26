@@ -27,7 +27,6 @@ use std::{
 };
 
 use anyhow::{Context, Error, Result, anyhow};
-use dirs;
 use reqwest::StatusCode;
 use reqwest::{blocking::Client, header::HeaderMap};
 // use openai_api_rs::v1::api::OpenAIClient;
@@ -95,7 +94,7 @@ pub fn initialise() -> Result<storage::Settings, anyhow::Error> {
 
     // detect and read config file
     {
-        let config_file = match std::fs::exists(&config_file_path) {
+        match std::fs::exists(&config_file_path) {
             Ok(true) => Ok(std::fs::File::open(&config_file_path).with_context(|| {
                 anyhow!(
                     "Failed to read config file at {}",
