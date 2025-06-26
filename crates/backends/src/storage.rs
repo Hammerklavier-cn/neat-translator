@@ -1,19 +1,19 @@
 use serde::{Deserialize, Serialize};
 
-pub struct BackendManager {
-    api_key: String,
-    url: String,
-}
+// pub struct BackendManager {
+//     api_key: String,
+//     url: String,
+// }
 
-impl BackendManager {
-    pub fn get_api_key(&self) -> &str {
-        &self.api_key
-    }
+// impl BackendManager {
+//     pub fn get_api_key(&self) -> &str {
+//         &self.api_key
+//     }
 
-    pub fn save_api_key(&mut self, api_key: String) {
-        self.api_key = api_key;
-    }
-}
+//     pub fn save_api_key(&mut self, api_key: String) {
+//         self.api_key = api_key;
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {
