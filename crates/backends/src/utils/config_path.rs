@@ -1,8 +1,9 @@
+#[allow(unused_imports)]
 use anyhow::{Error, Result, anyhow};
 use std::path::PathBuf;
 
 #[cfg(target_os = "android")]
-pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
+pub fn get_config_dir() -> Result<PathBuf, Error> {
     use jni::JNIEnv;
     use jni::JavaVM;
     use jni::objects::{JObject, JString};
@@ -32,7 +33,7 @@ pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
 }
 
 #[cfg(target_os = "ios")]
-pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
+pub fn get_config_dir() -> Result<PathBuf, Error> {
     use objc::runtime::Object;
     use objc::{msg_send, sel, sel_impl};
 
@@ -61,7 +62,7 @@ pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
+pub fn get_config_dir() -> Result<PathBuf, Error> {
     dirs::config_dir().ok_or(anyhow::anyhow!("Cannot locate config_dir!"))
 }
 // 在其他平台使用默认实现
