@@ -5,28 +5,14 @@ use std::{
 
 use anyhow::{Error, Result, anyhow};
 use backends::{
-    QwenWordSentenceTranslator, SentenceTranslator, StreamSentenceTranslator, WordTranslator,
+    QwenWordSentenceTranslator, StreamSentenceTranslator, WordTranslator,
     dict_interface::WordExplanation,
 };
-use slint::{Model, ModelRc, VecModel};
-
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+use slint::{ModelRc, VecModel};
 
 slint::include_modules!();
 
+#[allow(dead_code)]
 pub fn run() -> Result<(), slint::PlatformError> {
     log::info!("Using slint interface");
     // First initialise and load api-keys, etc.
@@ -291,8 +277,6 @@ pub fn run() -> Result<(), slint::PlatformError> {
     });
     // `Logic.translate_word` callback
     main_window.global::<Logic>().on_translate_word({
-        let main_window_weak_arc = main_window_weak_arc.clone();
-
         let wd_rx_arc_mutex = wd_rx_arc_mutex.clone();
 
         let setting_window_weak_arc = setting_window_weak_arc.clone();
@@ -525,15 +509,9 @@ pub fn run() -> Result<(), slint::PlatformError> {
     });
     // Logic implementation
     main_window.global::<Logic>().on_translate_sentence({
-        let main_window_weak_arc = main_window_weak_arc.clone();
-        let setting_window_weak_arc = setting_window_weak_arc.clone();
-
         let rx_arc_mutex = st_rx_arc_mutex.clone();
 
         move |text, from_language, to_language, model| {
-            let main_window_weak = main_window_weak_arc.clone();
-            let main_window = main_window_weak.upgrade().unwrap();
-
             // let api_key = main_window.get_api_key().to_string();
             let setting_window = setting_window_weak_arc.clone().upgrade().unwrap();
             let settings_from_slint = setting_window.get_settings_from_slint();
